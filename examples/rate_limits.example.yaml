@@ -1,0 +1,33 @@
+# Example rate-limit configuration for langshark-bites.
+#
+# Copy this file to ~/.config/langshark_bites/rate_limits.yaml (or set
+# RATE_LIMIT_CONFIG_PATH to point at your own copy) and adapt the providers
+# to your project.  There are no built-in providers — define the external
+# APIs your agents call.
+#
+# Resolution order (highest wins): YAML file > env vars > embedded defaults.
+#
+#   # Per-provider env-var override (takes precedence over this file):
+#   RATE_LIMIT_<PROVIDER>_RPM=100
+#   RATE_LIMIT_<PROVIDER>_BURST=20
+#   RATE_LIMIT_<PROVIDER>_CONCURRENCY=10
+#
+# Fields per provider:
+#   requests_per_minute : "N requests per minute" (token bucket refill rate).
+#   burst               : max burst size (tokens in a full bucket).
+#                         Defaults to requests_per_minute if omitted.
+#   max_concurrent      : optional extra per-process concurrency cap.
+#   acquire_timeout     : max seconds a caller waits for a token (default 30).
+
+providers:
+  # Example: a news API limited to 100 requests/min with burst 20.
+  # newsapi:
+  #   requests_per_minute: 100
+  #   burst: 20
+  #   acquire_timeout: 30
+
+  # Example: an LLM provider limited to 60 requests/min.
+  # openai:
+  #   requests_per_minute: 60
+  #   burst: 10
+  #   max_concurrent: 5

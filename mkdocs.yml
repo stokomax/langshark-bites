@@ -1,0 +1,94 @@
+site_name: langshark-bites
+site_description: Bite-size add-ons and wrappers for building durable and scalable LangChain multi-agent solutions.
+site_url: https://stokomax.github.io/langshark-bites/
+repo_url: https://github.com/stokomax/langshark-bites
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  palette:
+    - scheme: default
+      primary: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_root_heading: true
+            show_if_no_docstring: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            separate_signature: true
+            signature_crossrefs: true
+            merge_init_into_class: true
+            parameter_headings: true
+            docstring_options:
+              ignore_init_summary: true
+            filters:
+              - "!^_"
+              - "!^log$"
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://api.python.langchain.com/en/stable/objects.inv
+
+markdown_extensions:
+  - admonition
+  - def_list
+  - footnotes
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+
+nav:
+  - Home: index.md
+  - Combining the bites: combining.md
+  - API Reference:
+      - api_rate_limiter: api_rate_limiter.md
+      - api_backoff: api_backoff.md
+      - provider_failover: provider_failover.md
+      - json_output_parser: json_output_parser.md
+      - state_reducers: state_reducers.md
+      - observability: observability.md
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/stokomax/langshark-bites

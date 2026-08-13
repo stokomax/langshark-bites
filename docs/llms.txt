@@ -1,0 +1,24 @@
+# langshark-bites
+
+> Bite-size add-ons and wrappers for building durable and scalable LangChain multi-agent solutions.
+
+## Docs
+
+- [Home](https://stokomax.github.io/langshark-bites/): Overview of the package, the bites at a glance, and installation.
+- [Combining the bites](https://stokomax.github.io/langshark-bites/combining/): A realistic end-to-end scenario showing how the bites work together.
+- [api_rate_limiter](https://stokomax.github.io/langshark-bites/api_rate_limiter/): Distributed Redis-backed token-bucket rate limiter for external API calls. Key API: RateLimiter, RateLimitConfig, rate_limited.
+- [api_backoff](https://stokomax.github.io/langshark-bites/api_backoff/): Observable backoff sleep helper for retrying throttled external API calls. Key API: async_backoff.
+- [provider_failover](https://stokomax.github.io/langshark-bites/provider_failover/): Circuit breaker for exhausted LLM provider credit, plus model fallback-chain construction. Key API: model_with_fallbacks, ExhaustedProviderError, ExhaustedProviderCallback, is_fallback_error, is_provider_exhausted, mark_provider_exhausted, on_provider_exhausted.
+- [json_output_parser](https://stokomax.github.io/langshark-bites/json_output_parser/): Parse free-text JSON from models that reject response_format. Key API: extract_structured_from_messages.
+- [state_reducers](https://stokomax.github.io/langshark-bites/state_reducers/): LangGraph state reducers for multi-agent accumulation. Key API: envelope_reducer.
+- [observability](https://stokomax.github.io/langshark-bites/observability/): Tracing backends (Phoenix/OpenInference) with span decorators for agents, chains, and tools. Key API: init_phoenix, phoenix_get_tracer, phoenix_is_initialized, agent_span, chain_span, tool_span.
+
+## Examples
+
+- [rate_limiter.py](https://github.com/stokomax/langshark-bites/blob/main/examples/rate_limiter.py): Runnable example for api_rate_limiter.
+- [backoff.py](https://github.com/stokomax/langshark-bites/blob/main/examples/backoff.py): Runnable example for api_backoff.
+- [provider_failover.py](https://github.com/stokomax/langshark-bites/blob/main/examples/provider_failover.py): Runnable example for provider_failover.
+- [json_output_parser.py](https://github.com/stokomax/langshark-bites/blob/main/examples/json_output_parser.py): Runnable example for json_output_parser.
+- [state_reducers.py](https://github.com/stokomax/langshark-bites/blob/main/examples/state_reducers.py): Runnable example for state_reducers.
+- [observability.py](https://github.com/stokomax/langshark-bites/blob/main/examples/observability.py): Runnable example for observability.
+- [rate_limits.example.yaml](https://github.com/stokomax/langshark-bites/blob/main/examples/rate_limits.example.yaml): Rate-limit configuration schema.

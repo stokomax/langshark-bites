@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://stokomax.github.io/langshark-bites/</loc>
+  </url>
+  <url>
+    <loc>https://stokomax.github.io/langshark-bites/combining/</loc>
+  </url>
+  <url>
+    <loc>https://stokomax.github.io/langshark-bites/api_rate_limiter/</loc>
+  </url>
+  <url>
+    <loc>https://stokomax.github.io/langshark-bites/api_backoff/</loc>
+  </url>
+  <url>
+    <loc>https://stokomax.github.io/langshark-bites/provider_failover/</loc>
+  </url>
+  <url>
+    <loc>https://stokomax.github.io/langshark-bites/json_output_parser/</loc>
+  </url>
+  <url>
+    <loc>https://stokomax.github.io/langshark-bites/state_reducers/</loc>
+  </url>
+</urlset>

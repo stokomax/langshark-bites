@@ -1,0 +1,38 @@
+/* Banner hero — brand identity borrowed from the langshark splash screen.
+   Shark fin + wordmark in the langshark signature cyan (#22d3ee). */
+
+.banner-hero {
+  text-align: center;
+  margin: 0.5em 0 1.5em;
+}
+
+.banner-hero pre {
+  font-family: var(--md-code-font-family);
+  line-height: 1.15;
+  font-size: 0.9rem;
+  background: transparent;
+  padding: 0.5em 0;
+  margin: 0;
+}
+
+.banner-fin {
+  color: #22d3ee;
+  font-weight: bold;
+}
+
+.banner-wordmark {
+  display: block;
+  color: #22d3ee;
+  font-weight: bold;
+  letter-spacing: 0.35em;
+  margin-top: 0.6em;
+  padding-left: 0.35em; /* optically center the letter-spacing */
+}
+
+.banner-tagline {
+  display: block;
+  color: var(--md-default-fg-color--lighter);
+  font-style: italic;
+  margin-top: 0.4em;
+  font-size: 0.9rem;
+}

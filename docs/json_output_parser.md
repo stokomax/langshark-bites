@@ -4,7 +4,7 @@ Parse free-text JSON from models that reject `response_format` (e.g. DeepSeek th
 
 ## The problem
 
-When you use `create_agent(response_format=...)`, the model returns validated Pydantic models. But some models, such as DeepSeek in reasoning mode, reject all forms of `response_format`. They output free-text JSON in the message content instead, often with reasoning noise before the actual output.
+When you use [`create_agent(response_format=...)`](https://docs.langchain.com/oss/python/langchain/agents/create_agent), the model returns validated Pydantic models. But some models, such as DeepSeek in reasoning mode, reject all forms of `response_format`. They output free-text JSON in the message content instead, often with reasoning noise before the actual output.
 
 ## How this bite helps
 
@@ -12,7 +12,7 @@ When you use `create_agent(response_format=...)`, the model returns validated Py
 
 ## What topologies it supports
 
-- `create_agent` with `response_format`, where the model may reject it.
+- [`create_agent`](https://docs.langchain.com/oss/python/langchain/agents/create_agent) with `response_format`, where the model may reject it.
 - Any agent that needs structured output from a model that will not honor `response_format`.
 - DeepSeek thinking or reasoning mode, where the model embeds JSON in its message content.
 

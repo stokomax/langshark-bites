@@ -4,13 +4,13 @@ LangGraph state reducers for multi-agent accumulation.
 
 ## The problem
 
-When `Send` fan-out dispatches parallel workers, their results merge back into the shared graph state in non-deterministic order. A plain `operator.add` duplicates rows whenever a later node updates an existing entry. For example, a persist node flips `persisted=True` on an already-collected result, and now that result appears twice.
+When [`Send`](https://docs.langchain.com/oss/python/langgraph/reference/types#langgraph.types.Send) fan-out dispatches parallel workers, their results merge back into the shared graph state in non-deterministic order. A plain [`operator.add`](https://docs.python.org/3/library/operator.html#operator.add) duplicates rows whenever a later node updates an existing entry. For example, a persist node flips `persisted=True` on an already-collected result, and now that result appears twice.
 
 ## What is `Send`?
 
-`Send` is a LangGraph function that lets a node dynamically dispatch multiple tasks in a single step. It is the way you express "run this same work for each of these inputs, in parallel".
+[`Send`](https://docs.langchain.com/oss/python/langgraph/reference/types#langgraph.types.Send) is a LangGraph function that lets a node dynamically dispatch multiple tasks in a single step. It is the way you express "run this same work for each of these inputs, in parallel".
 
-Here is how `Send` works. A node returns a list of `Send` objects, each carrying a target node (or subgraph) and an input for that target. LangGraph then schedules one task per `Send`, runs each task to completion, and merges the results back into the shared state.
+Here is how [`Send`](https://docs.langchain.com/oss/python/langgraph/reference/types#langgraph.types.Send) works. A node returns a list of `Send` objects, each carrying a target node (or subgraph) and an input for that target. LangGraph then schedules one task per `Send`, runs each task to completion, and merges the results back into the shared state.
 
 ```python
 from langgraph.types import Send
@@ -20,7 +20,7 @@ def fan_out(state):
     return [Send("analyze", {"ticker": t}) for t in state["tickers"]]
 ```
 
-The key idea is that `Send` is about dispatching work, not about waiting for it. You do not get a handle to wait on or a callback to register. You hand the tasks to LangGraph, and LangGraph handles the scheduling and the merge. That is why the merge step, the reducer, matters so much: it is the part that collects the results, and it has to work correctly no matter what order the tasks finish in.
+The key idea is that [`Send`](https://docs.langchain.com/oss/python/langgraph/reference/types#langgraph.types.Send) is about dispatching work, not about waiting for it. You do not get a handle to wait on or a callback to register. You hand the tasks to LangGraph, and LangGraph handles the scheduling and the merge. That is why the merge step, the reducer, matters so much: it is the part that collects the results, and it has to work correctly no matter what order the tasks finish in.
 
 ## How this bite helps
 
@@ -38,7 +38,7 @@ The core difficulty is that parallel results arrive in non-deterministic order. 
 
 Here is how the reducer uses it. It keeps a map from `task_id` to the current entry. When a new result arrives, the reducer looks up the `task_id`. If the key already exists, the new result is merged into the existing entry in place, so the entry is updated rather than appended. If the key is new, the entry is added. The order of the returned list is the order in which each `task_id` was first seen, but that order is not meaningful. What matters is that each logical task appears exactly once, and later updates to it overwrite earlier ones.
 
-This is what makes the merge correct without ordering. A plain `operator.add` would append every result, so if a persist node later updates an existing entry, you get a duplicate. `envelope_reducer` recognizes the update as the same `task_id` and merges it in place, so there is no duplicate regardless of when the update arrives.
+This is what makes the merge correct without ordering. A plain [`operator.add`](https://docs.python.org/3/library/operator.html#operator.add) would append every result, so if a persist node later updates an existing entry, you get a duplicate. `envelope_reducer` recognizes the update as the same `task_id` and merges it in place, so there is no duplicate regardless of when the update arrives.
 
 ## Why not completion notifiers?
 
@@ -46,15 +46,15 @@ When you want parallel work, the natural instinct is to spawn it and wait for a 
 
 LangGraph threads are not that. A LangGraph thread (the `thread_id`) is about state persistence and checkpointing, not OS-thread scheduling. A graph run is a sequence of steps, and you cannot pause a running node mid-execution and resume it elsewhere. So the spawn-and-notify model does not map onto LangGraph.
 
-`Send` is not a way to spawn OS threads or register completion callbacks. It lets a node dynamically dispatch multiple tasks. LangGraph schedules those tasks, runs each one to completion, and merges the results back into the shared state. (When several tasks are ready at once, LangGraph runs them together in one superstep.)
+[`Send`](https://docs.langchain.com/oss/python/langgraph/reference/types#langgraph.types.Send) is not a way to spawn OS threads or register completion callbacks. It lets a node dynamically dispatch multiple tasks. LangGraph schedules those tasks, runs each one to completion, and merges the results back into the shared state. (When several tasks are ready at once, LangGraph runs them together in one superstep.)
 
 The key shift is this: instead of "spawn work and wait for a notifier", you express parallelism as "dispatch N independent tasks, then merge their results with a reducer". The reducer is a pure function on state. It does not need to know when a task finished or in what order. It just combines the existing state with the new results. That is why you do not need a completion notifier: the reducer is the completion handling, built into the graph structure.
 
-This is the Map/Reduce pattern. `Send` is the Map (the fan-out). The reducer is the Reduce (the merge). `envelope_reducer` is the Reduce half, and it is what makes the merge correct when results arrive in non-deterministic order.
+This is the Map/Reduce pattern. [`Send`](https://docs.langchain.com/oss/python/langgraph/reference/types#langgraph.types.Send) is the Map (the fan-out). The reducer is the Reduce (the merge). `envelope_reducer` is the Reduce half, and it is what makes the merge correct when results arrive in non-deterministic order.
 
 ## What topologies it supports
 
-- `Send` fan-out, where parallel workers accumulate results into shared state.
+- [`Send`](https://docs.langchain.com/oss/python/langgraph/reference/types#langgraph.types.Send) fan-out, where parallel workers accumulate results into shared state.
 - Multi-agent graphs where a persist node updates already-collected results.
 - Any graph state field that accumulates a list of result envelopes keyed by `task_id`.
 

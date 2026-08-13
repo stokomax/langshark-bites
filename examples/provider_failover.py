@@ -1,7 +1,7 @@
 """Runnable example for the provider_failover bite.
 
 This example shows how to build a model factory, guard it against exhausted
-providers, and use create_model_with_fallback to get a model with a baked-in
+providers, and use model_with_fallbacks to get a model with a baked-in
 fallback chain. It uses a stand-in model factory so it runs without real
 LLM provider packages or API keys.
 
@@ -16,8 +16,9 @@ from __future__ import annotations
 
 from langshark_bites.provider_failover import (
     ExhaustedProviderError,
-    _exhausted,
-    create_model_with_fallback,
+    is_provider_exhausted,
+    mark_provider_exhausted,
+    model_with_fallbacks,
 )
 
 
@@ -48,15 +49,14 @@ class FallbackChain:
 
 def create_model(model_name: str, max_tokens: int = 8192) -> FakeModel:
     """Model factory. Guards against exhausted providers, like a real one."""
-    prefix = model_name.split("-")[0]
-    if _exhausted.exhausted(prefix):
-        raise ExhaustedProviderError(prefix, model_name)
+    if is_provider_exhausted(model_name):
+        raise ExhaustedProviderError(model_name, model_name)
     return FakeModel(model_name)
 
 
 def main() -> None:
     # Normal case: primary plus two fallbacks.
-    model = create_model_with_fallback(
+    model = model_with_fallbacks(
         "claude-sonnet-4-5",
         "deepseek-v4-flash,gpt-4o-mini",
         max_tokens=8192,
@@ -65,11 +65,11 @@ def main() -> None:
     print("normal:", model)
 
     # Simulate the primary provider's credit running out.
-    _exhausted.add("claude")
+    mark_provider_exhausted("claude")
     print("claude marked exhausted")
 
     # Now the primary is skipped and the first fallback is promoted.
-    model = create_model_with_fallback(
+    model = model_with_fallbacks(
         "claude-sonnet-4-5",
         "deepseek-v4-flash,gpt-4o-mini",
         max_tokens=8192,

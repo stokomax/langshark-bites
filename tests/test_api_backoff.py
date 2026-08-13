@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from langshark_bites.api_backoff import async_backoff
+from langshark_bites.api_backoff import async_backoff, retry_after_seconds
 
 
 @pytest.mark.asyncio
@@ -68,3 +68,48 @@ async def test_context_defaults_to_empty(mock_warning, mock_sleep):
         delay_sec=10.0,
         context="",
     )
+
+
+# ---------------------------------------------------------------------------
+# retry_after_seconds
+# ---------------------------------------------------------------------------
+
+
+class _Resp:
+    """Minimal stand-in with a .headers mapping."""
+
+    def __init__(self, headers):
+        self.headers = headers
+
+
+def test_retry_after_integer_seconds():
+    r = _Resp({"Retry-After": "30"})
+    assert retry_after_seconds(r) == 30.0
+
+
+def test_retry_after_missing_header_returns_none():
+    assert retry_after_seconds(_Resp({})) is None
+
+
+def test_retry_after_unparseable_returns_none():
+    r = _Resp({"Retry-After": "sometime later"})
+    assert retry_after_seconds(r) is None
+
+
+def test_retry_after_http_date():
+    from datetime import datetime, timedelta, timezone
+
+    retry_at = datetime.now(timezone.utc) + timedelta(seconds=60)
+    r = _Resp(
+        {"Retry-After": retry_at.strftime("%a, %d %b %Y %H:%M:%S GMT")}
+    )
+    secs = retry_after_seconds(r)
+    assert secs is not None
+    assert 55.0 <= secs <= 65.0
+
+
+def test_retry_after_object_without_headers():
+    class NoHeaders:
+        pass
+
+    assert retry_after_seconds(NoHeaders()) is None

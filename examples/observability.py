@@ -26,30 +26,27 @@ from langshark_bites.observability import (
     agent_span,
     chain_span,
     init_phoenix,
-    is_initialized,
+    phoenix_is_initialized,
     tool_span,
 )
 
 
-@agent_span(
-    name="agent_name",
-    metadata_fn=lambda agent_name, as_of, **_: {"agent": agent_name, "as_of": as_of},
-)
+@agent_span(parse_agent_name=True, tags={"as_of": "2026-07-10"})
 async def run_worker(agent_name: str, as_of: str) -> str:
     """Simulate a sub-agent worker in a supervisor/worker graph."""
-    # The span is named after `agent_name` at runtime, so the trace shows
-    # which worker ran even though this is invoked positionally in a loop.
+    # parse_agent_name names each span after the running agent, so the trace
+    # shows which worker ran even though this is invoked positionally in a loop.
     await asyncio.sleep(0.01)
     return f"{agent_name}:{as_of}"
 
 
-@chain_span(name="router")
+@chain_span(default_override="router")
 def route(task: str) -> str:
     """Simulate a deterministic routing step."""
     return f"routed:{task}"
 
 
-@tool_span(name="lookup")
+@tool_span(default_override="lookup")
 def lookup(key: str) -> str:
     """Simulate a tool call."""
     return f"value:{key}"
@@ -61,7 +58,7 @@ async def main() -> None:
     # the event loop (registration scans the SDK and can take seconds).
     init_phoenix(endpoint="http://localhost:6006", project_name="example")
 
-    print(f"phoenix initialized: {is_initialized()}")
+    print(f"phoenix initialized: {phoenix_is_initialized()}")
     print(route("generate_brief"))
     print(lookup("ticker"))
 

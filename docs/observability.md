@@ -36,12 +36,12 @@ The Phoenix UI/collector is meant to run as its **own service** (e.g. the offici
 
 `init_phoenix` is idempotent and thread-safe: call it once per process (ideally at startup, or via `asyncio.to_thread` if you are under ASGI, since registration scans the SDK and can take seconds). If Phoenix is missing or registration fails, it **soft-fails** — tracing silently no-ops, so a registration failure does not stop the application.
 
-The span decorators — `agent_span`, `chain_span`, `tool_span` — are the Phoenix equivalent of LangSmith's `@traceable`. They are thin wrappers over OpenInference that:
+The span decorators — `agent_span`, `chain_span`, `tool_span` — are the Phoenix equivalent of LangSmith's [`@traceable`](https://docs.smith.langchain.com/how_to_guides/tracing/traceable). They are thin wrappers over OpenInference that:
 
 - **No-op gracefully** when Phoenix is not initialized (safe in unit tests).
 - Tag spans with the correct **OpenInference span kind** so they render correctly in the Phoenix UI.
-- Attach **metadata** via `metadata_fn` so spans carry filterable keys.
-- Resolve span names from **bound parameters** (see below).
+- Attach **tags** (a plain dict) so spans carry filterable keys.
+- **Name spans** from a fixed override or the running agent's name.
 
 ## The span types
 
@@ -51,20 +51,18 @@ OpenInference distinguishes span kinds to structure the trace tree in the Phoeni
 
 Use this for any node that represents an **agent**: both the *supervisor* that routes work and the *sub-agents/workers* it delegates to. In a supervisor/worker graph:
 
-- The **supervisor** span wraps the routing decision — `@agent_span(name="supervisor")`.
-- Each **worker** span wraps one sub-agent's execution — `@agent_span(name="agent_name")`.
+- The **supervisor** span wraps the routing decision — `@agent_span(default_override="supervisor")`.
+- Each **worker** span wraps one sub-agent's execution — `@agent_span(parse_agent_name=True)`.
 
-Because `name` can be a parameter name, the span is named after the *runtime* value, not the wrapper function. This is the mechanism that gives each worker span the correct name:
+With `parse_agent_name=True`, the span is named after the `agent_name` parameter's runtime value — so `run_worker("daily_signal_analysis", ...)` traces as `daily_signal_analysis`, even when the worker is invoked positionally in a loop:
 
 ```python
-@agent_span(name="agent_name", metadata_fn=lambda agent_name, as_of, **_: {
-    "agent": agent_name, "as_of": as_of,
-})
+@agent_span(parse_agent_name=True, tags={"as_of": "2026-07-10"})
 async def run_worker(agent_name: str, as_of: str, ...):
     ...
 ```
 
-Here `name="agent_name"` resolves to the actual agent being run (e.g. `"daily_signal_analysis"`), so the Phoenix trace shows *which* worker ran — even though the function is invoked positionally in a loop.
+The span name comes from a fixed `default_override` or the running agent's name; `tags` adds filterable labels. Both are optional — with neither set, the span uses the function's own name.
 
 ### `chain_span` — deterministic routing / sequences
 
@@ -78,7 +76,7 @@ Use for individual **tool calls** the agent makes (search, DB queries, API calls
 
 - Supervisor/worker multi-agent graphs (distinguish supervisor vs. worker agents).
 - Any node that wants a span: chains, tools, retrieval steps.
-- Works alongside `langchain-core`'s LangGraph runtime; with `auto_instrument=True`, LangChain's own LLM/tool calls nest under your manual spans automatically.
+- Works alongside [`langchain-core`](https://docs.langchain.com/oss/python/langchain/langchain-core) 's LangGraph runtime; with `auto_instrument=True`, LangChain's own LLM/tool calls nest under your manual spans automatically.
 
 
 ## Example

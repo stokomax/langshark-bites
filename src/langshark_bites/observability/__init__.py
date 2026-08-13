@@ -15,16 +15,16 @@ from __future__ import annotations
 from langshark_bites.observability.phoenix import (
     agent_span,
     chain_span,
-    get_tracer,
     init_phoenix,
-    is_initialized,
+    phoenix_get_tracer,
+    phoenix_is_initialized,
     tool_span,
 )
 
 __all__ = [
     "init_phoenix",
-    "get_tracer",
-    "is_initialized",
+    "phoenix_get_tracer",
+    "phoenix_is_initialized",
     "agent_span",
     "chain_span",
     "tool_span",

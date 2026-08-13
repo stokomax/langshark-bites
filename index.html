@@ -1,0 +1,1159 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Bite-size add-ons and wrappers for building durable and scalable LangChain multi-agent solutions.">
+      
+      
+      
+        <link rel="canonical" href="https://stokomax.github.io/langshark-bites/">
+      
+      
+      
+        <link rel="next" href="combining/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>langshark-bites</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="stylesheets/extra.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="cyan" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#langshark-bites" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="langshark-bites" class="md-header__button md-logo" aria-label="langshark-bites" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            langshark-bites
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Home
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="cyan" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="cyan" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/stokomax/langshark-bites" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="langshark-bites" class="md-nav__button md-logo" aria-label="langshark-bites" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    langshark-bites
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/stokomax/langshark-bites" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is this?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-bites-fit-together" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the bites fit together
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-scaling-journey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A scaling journey
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#do-you-recognize-these-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Do you recognize these problems?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rate-limit-external-api-calls-api_rate_limiter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate limit external API calls — api_rate_limiter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#see-throttled-retries-in-the-logs-api_backoff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See throttled retries in the logs — api_backoff
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fail-over-to-a-fallback-llm-provider-provider_failover" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fail over to a fallback LLM provider — provider_failover
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parse-free-text-json-from-a-model-json_output_parser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parse free-text JSON from a model — json_output_parser
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge-parallel-results-without-duplicates-state_reducers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Merge parallel results without duplicates — state_reducers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trace-your-agents-observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trace your agents — observability
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-quick-note-on-langgraph-terms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A quick note on LangGraph terms
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="combining/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Combining the bites
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api_rate_limiter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    api_rate_limiter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api_backoff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    api_backoff
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="provider_failover/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    provider_failover
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="json_output_parser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    json_output_parser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="state_reducers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    state_reducers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is this?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-bites-fit-together" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the bites fit together
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-scaling-journey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A scaling journey
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#do-you-recognize-these-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Do you recognize these problems?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rate-limit-external-api-calls-api_rate_limiter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rate limit external API calls — api_rate_limiter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#see-throttled-retries-in-the-logs-api_backoff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See throttled retries in the logs — api_backoff
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fail-over-to-a-fallback-llm-provider-provider_failover" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fail over to a fallback LLM provider — provider_failover
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parse-free-text-json-from-a-model-json_output_parser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parse free-text JSON from a model — json_output_parser
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge-parallel-results-without-duplicates-state_reducers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Merge parallel results without duplicates — state_reducers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trace-your-agents-observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trace your agents — observability
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-quick-note-on-langgraph-terms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A quick note on LangGraph terms
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="langshark-bites">langshark-bites<a class="headerlink" href="#langshark-bites" title="Permanent link">&para;</a></h1>
+<div class="banner-hero">
+<pre>
+<span class="banner-fin">          ██</span>
+<span class="banner-fin">        ████</span>
+<span class="banner-fin">      ██████</span>
+<span class="banner-fin">    █████████</span>
+<span class="banner-wordmark">L A N G S H A R K   B I T E S</span>
+</pre>
+</div>
+
+<p>A collection of bite-size add-ons and wrappers for building durable and scalable LangChain multi-agent solutions.</p>
+<h2 id="what-is-this">What is this?<a class="headerlink" href="#what-is-this" title="Permanent link">&para;</a></h2>
+<p>If you are building a multi-agent system with LangChain or LangGraph, your agents spend most of their time doing two things: calling external APIs (news feeds, databases, search) and calling LLM providers. Both of those calls can fail or get throttled in ways that are hard to see and hard to control. When you scale out to more replicas or more parallel subagents, those problems get more difficult to track.</p>
+<p>This package is a set of small, reusable building blocks that handle those frustrating infrastructure problems for you. Each block, called a "bite", solves one specific problem. You can use them together or on their own. They do not care about your business logic, so you can drop them into any LangChain or LangGraph project.</p>
+<h2 id="how-the-bites-fit-together">How the bites fit together<a class="headerlink" href="#how-the-bites-fit-together" title="Permanent link">&para;</a></h2>
+<p>Think of a single request your agent makes to an external service. It goes through a lifecycle, and each bite handles one stage of that lifecycle.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>  BEFORE the call          THE CALL              AFTER rejection
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  ───────────────          ─────────             ───────────────
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  api_rate_limiter         provider API          api_backoff
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  (acquire a token)        (may return 429)      (wait + log, then retry)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  → prevents hitting       → if throttled,       → gives the provider
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    the limit                you land here         time to recover
+</code></pre></div>
+<p>The diagram above shows one lifecycle: the call to an external API. Two bites cover it — <code>api_rate_limiter</code> before the call and <code>api_backoff</code> after a rejection. Three more bites handle failure points elsewhere in the agent flow: the LLM provider itself, the model's output, and how parallel workers' results merge back into the graph state.</p>
+<ul>
+<li><strong><code>provider_failover</code></strong> handles the case where an LLM provider is permanently down (for example, its credit ran out). It skips that provider and uses a fallback model.</li>
+<li><strong><code>json_output_parser</code></strong> handles the case where a model returns free-text JSON instead of the structured output you asked for. It parses and validates it.</li>
+<li><strong><code>state_reducers</code></strong> handles the case where parallel subagents return results in random order. It merges them into your graph state without duplicating rows.</li>
+<li><strong><code>observability</code></strong> traces your agents so you can see which worker ran, what tools it called, and why a run was slow.</li>
+</ul>
+<p>If you are new to LangGraph, the <a href="#a-quick-note-on-langgraph-terms">quick note on terms</a> below explains the vocabulary. If you want to see how the bites work together in one realistic scenario, see <a href="combining/">Combining the bites</a>.</p>
+<h2 id="a-scaling-journey">A scaling journey<a class="headerlink" href="#a-scaling-journey" title="Permanent link">&para;</a></h2>
+<p>Most multi-agent projects start small. You build a prototype on your laptop, one process, a handful of agents. It works. Then you deploy it, run more replicas, fan out more subagents, and the infrastructure problems start. The code that worked in the prototype starts getting throttled, or duplicating results, or wasting calls to a provider that ran out of credit.</p>
+<p>The bites are built so you do not have to rewrite your code when that happens. You write against the same API whether you are running one process or a hundred. The difference is handled by the infrastructure, not by your code.</p>
+<p>The clearest example is <code>api_rate_limiter</code>. On your laptop, with no Redis running, it uses an in-process token bucket. Your code is unchanged. When you deploy to many replicas and point it at Redis, it coordinates the budget across all of them. Same code, same calls, just a shared budget.</p>
+<p>The other bites follow the same idea. <code>provider_failover</code>, <code>json_output_parser</code>, and <code>state_reducers</code> behave the same at small and large scale, because they do not depend on how many processes you run. <code>api_backoff</code> is the same in spirit: it reads the wait time (for example, from a <code>Retry-After</code> header), sleeps exactly that long, and logs a warning when the wait exceeds a configurable threshold — so it needs no shared state and is scale-agnostic by nature.</p>
+<p>The practical result: you implement once, and the same code carries you from a single-process prototype to a multi-replica deployment. You add infrastructure as you grow, not code.</p>
+<h2 id="do-you-recognize-these-problems">Do you recognize these problems?<a class="headerlink" href="#do-you-recognize-these-problems" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Your agents call an external API, and once you run more than one replica, you start getting throttled. A per-process limit is not enough.</li>
+<li>For the LLM provider itself, transient failures and rate limits are best handled with LangChain's <a href="https://docs.langchain.com/oss/python/langchain/middleware/built-in"><code>ModelRetryMiddleware</code></a>, which retries model calls with exponential backoff. <code>api_rate_limiter</code> does the same job, but for external API services that implement request rate limiting — it paces your requests against the provider's published limit so you get throttled less often.</li>
+<li>An API request gets throttled, you retry, but nobody can tell from the logs that a service is being throttled or for how long.</li>
+<li>An LLM provider's credit runs out in the middle of a run. Every call to that provider wastes a round trip, and you want to fall back to another model automatically.</li>
+<li>A model refuses to honor <code>response_format</code> and returns free-text JSON buried in reasoning noise. You want to use a powerful reasoning model like DeepSeek alongside models that do support structured output — without changing your code — so free-text results need to be parsed reliably.</li>
+<li>You fan out work to parallel subagents, and their results come back in random order. A plain list append duplicates rows when a later node updates an existing entry.</li>
+<li>You cannot see, from a deployed run, which sub-agent ran, what tools it called, or where the time went. You want distributed traces of your agents.</li>
+</ul>
+<p>If any of these sound familiar, this package is for you.</p>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<p>Each bite solves one problem. Pick the one you are hitting, copy the happy path, and open the full docs for the details.</p>
+<h3 id="rate-limit-external-api-calls-api_rate_limiter">Rate limit external API calls — <code>api_rate_limiter</code><a class="headerlink" href="#rate-limit-external-api-calls-api_rate_limiter" title="Permanent link">&para;</a></h3>
+<p><strong>Solves:</strong> multiple replicas or subagents can exceed an external API's rate limit.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langshark_bites.api_rate_limiter</span><span class="w"> </span><span class="kn">import</span> <span class="n">RateLimiter</span><span class="p">,</span> <span class="n">rate_limited</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">limiter</span> <span class="o">=</span> <span class="n">RateLimiter</span><span class="o">.</span><span class="n">from_env</span><span class="p">()</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nd">@rate_limited</span><span class="p">(</span><span class="n">limiter</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;newsapi&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch_news</span><span class="p">(</span><span class="n">ticker</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="o">...</span>
+</code></pre></div>
+<p><a href="api_rate_limiter/">Full docs: <code>api_rate_limiter</code></a></p>
+<h3 id="see-throttled-retries-in-the-logs-api_backoff">See throttled retries in the logs — <code>api_backoff</code><a class="headerlink" href="#see-throttled-retries-in-the-logs-api_backoff" title="Permanent link">&para;</a></h3>
+<p><strong>Solves:</strong> when an external API throttles a request, the retry and its wait time are invisible in the logs, so operators cannot tell a service is being throttled or for how long.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langshark_bites.api_backoff</span><span class="w"> </span><span class="kn">import</span> <span class="n">async_backoff</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">await</span> <span class="n">async_backoff</span><span class="p">(</span><span class="n">wait</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;NewsAPI retry 1/3&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p><a href="api_backoff/">Full docs: <code>api_backoff</code></a></p>
+<h3 id="fail-over-to-a-fallback-llm-provider-provider_failover">Fail over to a fallback LLM provider — <code>provider_failover</code><a class="headerlink" href="#fail-over-to-a-fallback-llm-provider-provider_failover" title="Permanent link">&para;</a></h3>
+<p><strong>Solves:</strong> an LLM provider's credit runs out mid-run and wastes calls.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langshark_bites.provider_failover</span><span class="w"> </span><span class="kn">import</span> <span class="n">model_with_fallbacks</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">model</span> <span class="o">=</span> <span class="n">model_with_fallbacks</span><span class="p">(</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="s2">&quot;claude-sonnet-4-5&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="s2">&quot;deepseek-v4-flash,gpt-4o-mini&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">8192</span><span class="p">,</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">model_builder</span><span class="o">=</span><span class="n">create_model</span><span class="p">,</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">)</span>
+</code></pre></div>
+<p><a href="provider_failover/">Full docs: <code>provider_failover</code></a></p>
+<h3 id="parse-free-text-json-from-a-model-json_output_parser">Parse free-text JSON from a model — <code>json_output_parser</code><a class="headerlink" href="#parse-free-text-json-from-a-model-json_output_parser" title="Permanent link">&para;</a></h3>
+<p><strong>Solves:</strong> models that reject <code>response_format</code> return free-text JSON.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langshark_bites.json_output_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_structured_from_messages</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">content</span> <span class="o">=</span> <span class="n">extract_structured_from_messages</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;messages&quot;</span><span class="p">,</span> <span class="p">[]),</span> <span class="n">MySchema</span><span class="p">)</span>
+</code></pre></div>
+<p><a href="json_output_parser/">Full docs: <code>json_output_parser</code></a></p>
+<h3 id="merge-parallel-results-without-duplicates-state_reducers">Merge parallel results without duplicates — <code>state_reducers</code><a class="headerlink" href="#merge-parallel-results-without-duplicates-state_reducers" title="Permanent link">&para;</a></h3>
+<p><strong>Solves:</strong> parallel workers duplicate rows when merging into graph state.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langshark_bites.state_reducers</span><span class="w"> </span><span class="kn">import</span> <span class="n">envelope_reducer</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">State</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">collected_outputs</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">envelope_reducer</span><span class="p">]</span>
+</code></pre></div>
+<p><a href="state_reducers/">Full docs: <code>state_reducers</code></a></p>
+<h3 id="trace-your-agents-observability">Trace your agents — <code>observability</code><a class="headerlink" href="#trace-your-agents-observability" title="Permanent link">&para;</a></h3>
+<p><strong>Solves:</strong> you cannot tell which worker ran, what tools it called, or why a run was slow.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langshark_bites.observability</span><span class="w"> </span><span class="kn">import</span> <span class="n">init_phoenix</span><span class="p">,</span> <span class="n">agent_span</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">init_phoenix</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="s2">&quot;http://localhost:6006&quot;</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="s2">&quot;my-app&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nd">@agent_span</span><span class="p">(</span><span class="n">parse_agent_name</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run_worker</span><span class="p">(</span><span class="n">agent_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="o">...</span>
+</code></pre></div>
+<p><a href="observability/">Full docs: <code>observability</code></a></p>
+<h2 id="a-quick-note-on-langgraph-terms">A quick note on LangGraph terms<a class="headerlink" href="#a-quick-note-on-langgraph-terms" title="Permanent link">&para;</a></h2>
+<p>If you are new to LangGraph, a few terms come up throughout these docs. Here is what they mean in plain language.</p>
+<ul>
+<li><strong>Graph state.</strong> The shared data structure that flows through your agent graph. As nodes run, they read from and write to this state. It is how results accumulate across steps.</li>
+<li><strong>Node.</strong> A single step in your graph. It takes the current state, does some work (often calling an API or an LLM), and returns an update to the state.</li>
+<li><strong>Reducer.</strong> A function LangGraph calls to merge a node's update into the existing state. It decides how new values combine with old ones.</li>
+<li><strong><a href="https://docs.langchain.com/oss/python/langgraph/reference/types#langgraph.types.Send"><code>Send</code> fan-out</a>.</strong> A LangGraph pattern where one node dispatches many parallel workers in a single step. All workers run at once and their results merge back into the state.</li>
+<li><strong>Superstep.</strong> A single step in which LangGraph runs several ready nodes at once, in parallel. When <code>Send</code> dispatches many tasks, they all run in the same superstep.</li>
+<li><strong><a href="https://docs.langchain.com/oss/python/langchain/agents/create_agent"><code>create_agent</code></a>.</strong> A LangChain helper that builds an agent from a model and a set of tools.</li>
+<li><strong>Middleware.</strong> Code that runs around each step an agent performs, and most importantly around the call to the LLM. Middleware wraps that call so it can observe or modify the request before it is sent and the response after it returns. In the agent-to-LLM flow, middleware sits between the agent and the model: it can inject a system prompt, capture the outgoing prompt, intercept tool calls, and record the model's output. Tracing and structured-output handling are typically implemented as middleware.</li>
+<li><strong><code>response_format</code>.</strong> A parameter that asks a model to return structured output (for example, JSON matching a schema) instead of free text.</li>
+</ul>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uv<span class="w"> </span>add<span class="w"> </span>langshark-bites
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># or</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>pip<span class="w"> </span>install<span class="w"> </span>langshark-bites
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+        
+          
+          <a href="combining/" class="md-footer__link md-footer__link--next" aria-label="Next: Combining the bites">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Combining the bites
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/stokomax/langshark-bites" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.sections", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

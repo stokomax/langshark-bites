@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://stokomax.github.io/langshark-bites/sitemap.xml

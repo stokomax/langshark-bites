@@ -17,23 +17,26 @@ This package provides small, reusable, project-agnostic building blocks:
   span decorators for agents, chains, and tools.
 """
 
-from .api_backoff import async_backoff
+from .api_backoff import async_backoff, retry_after_seconds
 from .api_rate_limiter import RateLimitConfig, RateLimiter, rate_limited
 from .json_output_parser import extract_structured_from_messages
 from .observability import (
     agent_span,
     chain_span,
-    get_tracer,
     init_phoenix,
-    is_initialized,
+    phoenix_get_tracer,
+    phoenix_is_initialized,
     tool_span,
 )
 from .provider_failover import (
-    CreditExhaustedCallback,
+    ExhaustedProviderCallback,
     ExhaustedProviderError,
-    _exhausted,
     create_model_with_fallback,
     is_fallback_error,
+    is_provider_exhausted,
+    mark_provider_exhausted,
+    model_with_fallbacks,
+    on_provider_exhausted,
 )
 from .state_reducers import envelope_reducer
 
@@ -41,17 +44,21 @@ __all__ = [
     "RateLimiter",
     "RateLimitConfig",
     "rate_limited",
-    "CreditExhaustedCallback",
+    "ExhaustedProviderCallback",
     "ExhaustedProviderError",
-    "_exhausted",
     "create_model_with_fallback",
     "is_fallback_error",
+    "is_provider_exhausted",
+    "mark_provider_exhausted",
+    "model_with_fallbacks",
+    "on_provider_exhausted",
     "async_backoff",
+    "retry_after_seconds",
     "envelope_reducer",
     "extract_structured_from_messages",
     "init_phoenix",
-    "get_tracer",
-    "is_initialized",
+    "phoenix_get_tracer",
+    "phoenix_is_initialized",
     "agent_span",
     "chain_span",
     "tool_span",

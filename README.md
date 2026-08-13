@@ -12,9 +12,10 @@ Each bite solves one specific problem you run into when building multi-agent sys
 |---|---|---|
 | `api_rate_limiter` | Multiple replicas or subagents can exceed an external API's rate limit | `RateLimiter`, `rate_limited` |
 | `api_backoff` | Retries after a throttled request are invisible to operators | `async_backoff` |
-| `provider_failover` | An LLM provider's credit runs out mid-run and wastes calls | `create_model_with_fallback` |
+| `provider_failover` | An LLM provider's credit runs out mid-run and wastes calls | `model_with_fallbacks` |
 | `json_output_parser` | Models that reject `response_format` return free-text JSON | `extract_structured_from_messages` |
 | `state_reducers` | Parallel workers duplicate rows when merging into graph state | `envelope_reducer` |
+| `observability` | You can't see what a supervisor delegated or why a run was slow | `init_phoenix`, `agent_span`, `chain_span`, `tool_span` |
 
 ## Installation
 
@@ -62,12 +63,12 @@ See [examples/backoff.py](examples/backoff.py) for a runnable example.
 
 **The problem.** An LLM provider can return a permanent credit or billing error (for example, "credit balance is too low"). If you keep calling that provider, every call wastes a round trip. You want to skip it and use a fallback model instead.
 
-**How this bite helps.** It keeps a process-level registry of exhausted providers. When a provider is marked exhausted, every subsequent model build for that provider skips it immediately and promotes the first available fallback. `create_model_with_fallback` builds a LangChain `RunnableWithFallbacks` with the circuit-breaker guard baked in.
+**How this bite helps.** It keeps a process-level registry of exhausted providers. When a provider is marked exhausted, every subsequent model build for that provider skips it immediately and promotes the first available fallback. `model_with_fallbacks` builds a LangChain `RunnableWithFallbacks` with the circuit-breaker guard baked in.
 
 ```python
-from langshark_bites.provider_failover import create_model_with_fallback
+from langshark_bites.provider_failover import model_with_fallbacks
 
-model = create_model_with_fallback(
+model = model_with_fallbacks(
     "claude-sonnet-4-5",
     "deepseek-v4-flash,gpt-4o-mini",
     max_tokens=8192,
@@ -108,6 +109,24 @@ class State(TypedDict):
 ```
 
 See [examples/state_reducers.py](examples/state_reducers.py) for a runnable example.
+
+### `observability`
+
+**The problem.** As your multi-agent app grows, you need to see what a supervisor delegated, which sub-agent ran, what tools it called, and why a run was slow or failed. Wiring in tracing with a self-hosted Phoenix collector is the answer — but the full Phoenix app SDK drags in a dependency chain (`pydantic-ai-slim` → `genai-prices` → `httpx2`) that races `openai>=2.53` and crashes non-deterministically under concurrent load.
+
+**How this bite helps.** It depends only on the slim `arize-phoenix-otel` client, so the import-ordering conflict never arises. `init_phoenix` is idempotent and thread-safe and **soft-fails** — if Phoenix is missing or unreachable, tracing silently no-ops instead of stopping the app. The `agent_span`, `chain_span`, and `tool_span` decorators are the Phoenix equivalent of LangSmith's `@traceable`: they no-op gracefully without Phoenix, tag spans with the right OpenInference span kind, attach filterable `tags`, and name each span after the running agent.
+
+```python
+from langshark_bites.observability import init_phoenix, agent_span
+
+init_phoenix(endpoint="http://localhost:6006", project_name="my-app")
+
+@agent_span(parse_agent_name=True, tags={"as_of": "2026-07-10"})
+async def run_worker(agent_name: str, as_of: str, ...):
+    ...
+```
+
+See [examples/observability.py](examples/observability.py) for a runnable example.
 
 ## Configuration
 

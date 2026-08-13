@@ -6,7 +6,7 @@ app SDK (see ``setup`` for the bloat rationale).
 
 Public API
 ----------
-- ``init_phoenix`` / ``get_tracer`` / ``is_initialized``
+- ``init_phoenix`` / ``phoenix_get_tracer`` / ``phoenix_is_initialized``
 - ``agent_span`` / ``chain_span`` / ``tool_span``
 
 Quick start
@@ -21,17 +21,17 @@ Quick start
     # Once per process (off the event loop if under ASGI):
     init_phoenix(endpoint="http://localhost:6006", project_name="my-app")
 
-    @agent_span(name="subagent", metadata_fn=lambda name, **_: {"agent": name})
-    async def run_worker(name: str, ...):
+    @agent_span(parse_agent_name=True, tags={"as_of": "2026-07-10"})
+    async def run_worker(agent_name: str, ...):
         ...
 """
 
 from __future__ import annotations
 
 from langshark_bites.observability.phoenix.setup import (
-    get_tracer,
     init_phoenix,
-    is_initialized,
+    phoenix_get_tracer,
+    phoenix_is_initialized,
 )
 from langshark_bites.observability.phoenix.traceable import (
     agent_span,
@@ -41,8 +41,8 @@ from langshark_bites.observability.phoenix.traceable import (
 
 __all__ = [
     "init_phoenix",
-    "get_tracer",
-    "is_initialized",
+    "phoenix_get_tracer",
+    "phoenix_is_initialized",
     "agent_span",
     "chain_span",
     "tool_span",

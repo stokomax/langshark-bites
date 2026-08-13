@@ -50,9 +50,9 @@ async def fetch_news_with_retry(ticker: str) -> str:
 The analysis step calls an LLM provider. If that provider's credit runs out, every call wastes a round trip. `provider_failover` builds the model with a fallback chain, so a failed provider is skipped and a fallback model is used automatically.
 
 ```python
-from langshark_bites.provider_failover import create_model_with_fallback
+from langshark_bites.provider_failover import model_with_fallbacks
 
-model = create_model_with_fallback(
+model = model_with_fallbacks(
     "claude-sonnet-4-5",
     "deepseek-v4-flash,gpt-4o-mini",
     max_tokens=8192,
@@ -74,7 +74,7 @@ if content is None:
 
 ## Step 5: Merge parallel results without duplicates
 
-You fan out to parallel subagents, one per ticker, using `Send`. Their results come back in random order. A plain `operator.add` would duplicate a row whenever a later node updates an existing entry (for example, a persist node flips `persisted=True`). `state_reducers` upserts by `task_id` so updates merge in place.
+You fan out to parallel subagents, one per ticker, using [`Send`](https://docs.langchain.com/oss/python/langgraph/reference/types#langgraph.types.Send). Their results come back in random order. A plain [`operator.add`](https://docs.python.org/3/library/operator.html#operator.add) would duplicate a row whenever a later node updates an existing entry (for example, a persist node flips `persisted=True`). `state_reducers` upserts by `task_id` so updates merge in place.
 
 ```python
 from typing import Annotated

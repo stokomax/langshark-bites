@@ -6,8 +6,8 @@ callers inject endpoint/project via arguments.
 Public API
 ----------
 - ``init_phoenix(endpoint, project_name, ...)`` — idempotent, thread-safe
-- ``get_tracer(name=None)`` — returns OITracer or None if not initialized
-- ``is_initialized()`` — bool
+- ``phoenix_get_tracer(name=None)`` — returns OITracer or None if not initialized
+- ``phoenix_is_initialized()`` — bool
 
 Design notes
 ------------
@@ -16,7 +16,7 @@ Design notes
   heavy imports).  Callers should invoke ``init_phoenix`` via
   ``asyncio.to_thread`` or at process startup.
 - If Phoenix is not installed, or ``init_phoenix`` was never called,
-  ``get_tracer`` returns None and the decorators in ``traceable`` no-op.
+  ``phoenix_get_tracer`` returns None and the decorators in ``traceable`` no-op.
 - This module only needs ``phoenix.otel`` (register + using_attributes),
   provided by the slim ``arize-phoenix-otel`` package.  Do NOT add the full
   ``arize-phoenix`` app SDK to the agent process: it drags in
@@ -37,7 +37,7 @@ _tracer_provider: Any = None
 _default_tracer: Any = None
 
 
-def is_initialized() -> bool:
+def phoenix_is_initialized() -> bool:
     """Return True if ``init_phoenix`` has completed successfully."""
     return _initialized
 
@@ -109,7 +109,7 @@ def init_phoenix(
             return None
 
 
-def get_tracer(name: str | None = None) -> Any | None:
+def phoenix_get_tracer(name: str | None = None) -> Any | None:
     """Return an OITracer, or None if Phoenix is not initialized.
 
     Args:

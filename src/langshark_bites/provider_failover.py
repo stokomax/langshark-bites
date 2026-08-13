@@ -1,37 +1,76 @@
-"""Process-level circuit breaker for exhausted LLM provider credit/billing.
+"""Build resilient LLM model fallback chains for LangChain ``create_agent``.
 
-When an LLM provider returns a permanent credit/billing error (HTTP 400/401/403
-with messages like "credit balance is too low"), this module marks the provider
-as exhausted so every subsequent ``create_model()`` or ``create_model_with_fallback()``
-call skips it immediately — zero wasted HTTP round-trips — and promotes the first
-available fallback.
+.. _ModelRetryMiddleware: https://reference.langchain.com/python/langchain/agents/middleware/model_retry/ModelRetryMiddleware
+.. _ModelFallbackMiddleware: https://reference.langchain.com/python/langchain/agents/middleware/model_fallback/ModelFallbackMiddleware
+.. _BaseCallbackHandler: https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.BaseCallbackHandler.html
+.. _with_fallbacks: https://api.python.langchain.com/en/stable/core/runnables/langchain_core.runnables.base.Runnable.html#langchain_core.runnables.base.Runnable.with_fallbacks
+.. _RunnableWithFallbacks: https://api.python.langchain.com/en/stable/runnables/langchain_core.runnables.fallbacks.RunnableWithFallbacks.html
+.. _create_agent: https://docs.langchain.com/oss/python/langchain/agents/create_agent
 
-Standalone module with zero project-specific imports except ``structlog``.
-Designed to be reusable across projects that use LangChain's ``create_agent``
-with multiple LLM providers.
+LangChain's built-in fault-tolerance middleware includes
+`ModelRetryMiddleware`_, which handles transient errors such as rate
+limits (HTTP 429) by retrying the same model, and
+`ModelFallbackMiddleware`_, which switches to an alternative model when
+the primary fails (internally using ``with_fallbacks`` /
+``RunnableWithFallbacks``).  This module *augments* that story for one
+specific case the built-ins leave open: a provider returns a
+**permanent** credit/billing error (HTTP 400/401/402/403 with messages like
+"credit balance is too low", "insufficient balance", "credits exhausted").
+
+When that happens, retrying is pointless and slows the agent.  This module
+marks the provider as **exhausted** at the process level, so every subsequent
+model build for that provider skips it immediately (zero wasted round-trips)
+and promotes the first available fallback to primary.  It then wires a
+fallback chain via LangChain's `with_fallbacks`_/`RunnableWithFallbacks`_.
+
+How the pieces fit
+------------------
+- ``is_provider_exhausted`` / ``mark_provider_exhausted`` /
+  ``on_provider_exhausted``: the process-level circuit breaker.  A provider
+  key (e.g. ``"claude"`` from ``"claude-sonnet-4-5"``) is marked exhausted and
+  remembered for the lifetime of the process.  ``on_provider_exhausted`` lets
+  model/agent caches clear themselves when a provider goes down.
+- ``ExhaustedProviderError``: raised by your own ``model_builder`` when asked
+  to build a model for an exhausted provider, so a fallback is chosen instead.
+- ``ExhaustedProviderCallback``: a LangChain `BaseCallbackHandler`_ you attach
+  to model instances (``callbacks=[...]``).  When the provider raises a
+  credit/billing error, it marks the provider exhausted.
+- ``is_fallback_error``: predicate for which exceptions should trigger
+  LangChain's fallback chain — i.e. the ``exceptions_to_handle`` you would
+  otherwise pass to `with_fallbacks`_.  Rate-limit (429) errors are excluded;
+  those are handled by retry middleware, not by switching models.
+- ``model_with_fallbacks``: the entry point.  Given a primary model name, a
+  comma-separated fallback list, and your ``model_builder``, it skips any
+  exhausted provider and returns a `RunnableWithFallbacks`_ (or a plain model
+  when there are no fallbacks).  Pass the result directly to `create_agent`_.
+
+The split is: `ModelRetryMiddleware`_ handles transient 429 stalls by
+waiting and retrying the same model; this module handles **permanent
+credit/billing** failures by skipping the provider and switching models
+(like `ModelFallbackMiddleware`_, but with a circuit-breaker that avoids
+rebuilding the failed provider).  Use them together.
 
 Usage
 -----
     from langshark_bites.provider_failover import (
-        _exhausted,
-        CreditExhaustedCallback,
-        create_model_with_fallback,
         ExhaustedProviderError,
+        ExhaustedProviderCallback,
+        model_with_fallbacks,
+        on_provider_exhausted,
     )
 
-    # In your model factory, guard create_model():
+    # Guard your model factory so it refuses exhausted providers:
     def create_model(model_name: str, max_tokens: int = 8192):
-        prefix = model_name.split("-")[0]
-        if _exhausted.exhausted(prefix):
-            raise ExhaustedProviderError(prefix, model_name)
+        if is_provider_exhausted(model_name):
+            raise ExhaustedProviderError(model_name, model_name)
         ...
 
     # Attach the callback to provider model instances:
     model = ChatAnthropic(...)
-    model.callbacks = [CreditExhaustedCallback("claude-sonnet-4-5")]
+    model.callbacks = [ExhaustedProviderCallback("claude-sonnet-4-5")]
 
-    # Replace manual ModelFallbackMiddleware with:
-    model = create_model_with_fallback(
+    # Build the model with a baked-in fallback chain:
+    model = model_with_fallbacks(
         "claude-sonnet-4-5",
         "deepseek-v4-flash,gpt-4o-mini",
         max_tokens=8192,
@@ -42,6 +81,7 @@ Usage
 
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import TYPE_CHECKING, Any, Callable
 
 import structlog
@@ -51,6 +91,16 @@ if TYPE_CHECKING:
     from langchain_core.language_models.chat_models import BaseChatModel
 
 log = structlog.get_logger(__name__)
+
+def _provider_of(model_name: str) -> str:
+    """Return the provider key for a model name (private helper).
+
+    Provider keys are derived from model names as the substring before the
+    first ``-``, e.g. ``"claude-sonnet-4-5"`` -> ``"claude"``.  Centralized
+    here so callers never embed this parsing.
+    """
+    return model_name.split("-")[0]
+
 
 # ---------------------------------------------------------------------------
 # Exhausted-provider registry (singleton)
@@ -76,10 +126,8 @@ class _ExhaustedProviders:
         """Mark *provider* as exhausted and fire all registered callbacks."""
         self._providers.add(provider)
         for cb in self._callbacks:
-            try:
+            with suppress(Exception):
                 cb(provider)
-            except Exception:
-                pass
 
     def exhausted(self, provider: str) -> bool:
         """Return True if *provider* is exhausted."""
@@ -104,6 +152,25 @@ class _ExhaustedProviders:
 _exhausted = _ExhaustedProviders()
 
 
+def is_provider_exhausted(provider: str) -> bool:
+    """Return True if *provider* has been marked exhausted in this process."""
+    return _exhausted.exhausted(provider)
+
+
+def mark_provider_exhausted(provider: str) -> None:
+    """Mark *provider* as exhausted and fire its ``on_provider_exhausted`` callbacks."""
+    _exhausted.add(provider)
+
+
+def on_provider_exhausted(callback):
+    """Register a callback invoked when any provider is marked exhausted.
+
+    The callback receives the provider key (e.g. ``"claude"``).  Use this to
+    clear agent/model caches so the next build promotes a fallback to primary.
+    """
+    _exhausted.on_exhausted(callback)
+
+
 # ---------------------------------------------------------------------------
 # Exception
 # ---------------------------------------------------------------------------
@@ -126,12 +193,14 @@ class ExhaustedProviderError(Exception):
 # ---------------------------------------------------------------------------
 
 
-class CreditExhaustedCallback(BaseCallbackHandler):
+class ExhaustedProviderCallback(BaseCallbackHandler):
     """LangChain callback that detects credit/billing errors from LLM providers.
 
-    Attach to model instances via ``model.callbacks = [callback]``.
-    On a matching error, adds the provider to ``_exhausted`` so subsequent
-    calls skip the provider entirely.
+    This is a `BaseCallbackHandler`_ that you attach to a model instance via
+    ``model.callbacks = [callback]``.  LangChain's callback system then invokes
+    the handler's ``on_llm_error`` automatically whenever a call to that model
+    raises an exception.  When the error matches a known credit/billing
+    pattern, the provider is marked exhausted so subsequent calls skip it.
 
     Parameters
     ----------
@@ -149,7 +218,7 @@ class CreditExhaustedCallback(BaseCallbackHandler):
         extra_patterns: list[str] | None = None,
     ):
         self._model_name = model_name
-        self._provider = model_name.split("-")[0]
+        self._provider = _provider_of(model_name)
         self._patterns = [
             "credit balance is too low",
             "insufficient balance",
@@ -163,10 +232,22 @@ class CreditExhaustedCallback(BaseCallbackHandler):
             self._patterns.extend(extra_patterns)
 
     def on_llm_error(self, error: BaseException, **kwargs: Any) -> None:
-        """Invoked by LangChain when a model call raises an exception."""
+        """Invoked by LangChain when a model call raises an exception.
+
+        LangChain calls this automatically through the callback list attached
+        to the model (the ``on_llm_error`` hook of `BaseCallbackHandler`_).
+        If the error message matches a known credit/billing pattern, the
+        provider is marked exhausted (via :func:`mark_provider_exhausted`) and
+        a ``model_credit_balance_exhausted`` warning is logged so operators
+        can see which provider tripped.
+
+        Args:
+            error: The exception raised by the model call.
+            kwargs: Additional callback context (ignored).
+        """
         msg = str(error).lower()
         if any(p in msg for p in self._patterns):
-            _exhausted.add(self._provider)
+            mark_provider_exhausted(self._provider)
             log.warning(
                 "model_credit_balance_exhausted",
                 model=self._model_name,
@@ -236,7 +317,7 @@ def is_fallback_error(exc: Exception) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def create_model_with_fallback(
+def model_with_fallbacks(
     primary_name: str,
     fallbacks_csv: str,
     max_tokens: int = 8192,
@@ -244,9 +325,9 @@ def create_model_with_fallback(
 ) -> "BaseChatModel":
     """Create a model with a baked-in fallback chain and circuit-breaker guard.
 
-    The returned object is a LangChain ``RunnableWithFallbacks`` wrapping a
+    The returned object is a LangChain `RunnableWithFallbacks`_ wrapping a
     primary model and ordered fallback models.  Pass it directly to
-    ``create_agent(model=...)`` — no ``ModelFallbackMiddleware`` needed.
+    `create_agent`_ ``(model=...)`` — no `ModelFallbackMiddleware`_ needed.
 
     If the primary provider is already marked as exhausted (from a prior call
     anywhere in the process), the first available non-exhausted fallback is
@@ -265,7 +346,7 @@ def create_model_with_fallback(
             caller must set ``model_builder`` (required for circuit breaker).
 
     Returns:
-        A ``BaseChatModel`` (or ``RunnableWithFallbacks`` wrapping one).
+        A ``BaseChatModel`` (or `RunnableWithFallbacks`_ wrapping one).
     """
     if model_builder is None:
         raise ValueError(
@@ -275,7 +356,7 @@ def create_model_with_fallback(
     fallback_names = [n.strip() for n in fallbacks_csv.split(",") if n.strip()]
 
     # ---- Circuit breaker: skip exhausted primary ---------------------------
-    primary_prefix = primary_name.split("-")[0]
+    primary_prefix = _provider_of(primary_name)
     if _exhausted.exhausted(primary_prefix) and fallback_names:
         promoted = fallback_names[0]
         fallback_names = fallback_names[1:]
@@ -290,7 +371,7 @@ def create_model_with_fallback(
     # ---- Also skip exhausted fallbacks -------------------------------------
     fallback_names = [
         n for n in fallback_names
-        if not _exhausted.exhausted(n.split("-")[0])
+        if not _exhausted.exhausted(_provider_of(n))
     ]
 
     primary = model_builder(primary_name, max_tokens=max_tokens)
@@ -317,3 +398,7 @@ def create_model_with_fallback(
         fallback_models,
         exceptions_to_handle=_pick_fallback_exc_types(),
     )
+
+
+# Backwards-compatible alias for ``model_with_fallbacks``.
+create_model_with_fallback = model_with_fallbacks

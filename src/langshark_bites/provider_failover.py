@@ -1,16 +1,9 @@
 """Build resilient LLM model fallback chains for LangChain ``create_agent``.
 
-.. _ModelRetryMiddleware: https://reference.langchain.com/python/langchain/agents/middleware/model_retry/ModelRetryMiddleware
-.. _ModelFallbackMiddleware: https://reference.langchain.com/python/langchain/agents/middleware/model_fallback/ModelFallbackMiddleware
-.. _BaseCallbackHandler: https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.BaseCallbackHandler.html
-.. _with_fallbacks: https://api.python.langchain.com/en/stable/core/runnables/langchain_core.runnables.base.Runnable.html#langchain_core.runnables.base.Runnable.with_fallbacks
-.. _RunnableWithFallbacks: https://api.python.langchain.com/en/stable/runnables/langchain_core.runnables.fallbacks.RunnableWithFallbacks.html
-.. _create_agent: https://docs.langchain.com/oss/python/langchain/agents/create_agent
-
 LangChain's built-in fault-tolerance middleware includes
-`ModelRetryMiddleware`_, which handles transient errors such as rate
+[`ModelRetryMiddleware`](https://reference.langchain.com/python/langchain/agents/middleware/model_retry/ModelRetryMiddleware), which handles transient errors such as rate
 limits (HTTP 429) by retrying the same model, and
-`ModelFallbackMiddleware`_, which switches to an alternative model when
+[`ModelFallbackMiddleware`](https://reference.langchain.com/python/langchain/agents/middleware/model_fallback/ModelFallbackMiddleware), which switches to an alternative model when
 the primary fails (internally using ``with_fallbacks`` /
 ``RunnableWithFallbacks``).  This module *augments* that story for one
 specific case the built-ins leave open: a provider returns a
@@ -21,7 +14,7 @@ When that happens, retrying is pointless and slows the agent.  This module
 marks the provider as **exhausted** at the process level, so every subsequent
 model build for that provider skips it immediately (zero wasted round-trips)
 and promotes the first available fallback to primary.  It then wires a
-fallback chain via LangChain's `with_fallbacks`_/`RunnableWithFallbacks`_.
+fallback chain via LangChain's [`with_fallbacks`](https://api.python.langchain.com/en/stable/core/runnables/langchain_core.runnables.base.Runnable.html#langchain_core.runnables.base.Runnable.with_fallbacks)/[`RunnableWithFallbacks`](https://api.python.langchain.com/en/stable/runnables/langchain_core.runnables.fallbacks.RunnableWithFallbacks.html).
 
 How the pieces fit
 ------------------
@@ -32,22 +25,22 @@ How the pieces fit
   model/agent caches clear themselves when a provider goes down.
 - ``ExhaustedProviderError``: raised by your own ``model_builder`` when asked
   to build a model for an exhausted provider, so a fallback is chosen instead.
-- ``ExhaustedProviderCallback``: a LangChain `BaseCallbackHandler`_ you attach
+- ``ExhaustedProviderCallback``: a LangChain [`BaseCallbackHandler`](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.BaseCallbackHandler.html) you attach
   to model instances (``callbacks=[...]``).  When the provider raises a
   credit/billing error, it marks the provider exhausted.
 - ``is_fallback_error``: predicate for which exceptions should trigger
   LangChain's fallback chain — i.e. the ``exceptions_to_handle`` you would
-  otherwise pass to `with_fallbacks`_.  Rate-limit (429) errors are excluded;
+  otherwise pass to [`with_fallbacks`](https://api.python.langchain.com/en/stable/core/runnables/langchain_core.runnables.base.Runnable.html#langchain_core.runnables.base.Runnable.with_fallbacks).  Rate-limit (429) errors are excluded;
   those are handled by retry middleware, not by switching models.
 - ``model_with_fallbacks``: the entry point.  Given a primary model name, a
   comma-separated fallback list, and your ``model_builder``, it skips any
-  exhausted provider and returns a `RunnableWithFallbacks`_ (or a plain model
-  when there are no fallbacks).  Pass the result directly to `create_agent`_.
+  exhausted provider and returns a [`RunnableWithFallbacks`](https://api.python.langchain.com/en/stable/runnables/langchain_core.runnables.fallbacks.RunnableWithFallbacks.html) (or a plain model
+  when there are no fallbacks).  Pass the result directly to [`create_agent`](https://docs.langchain.com/oss/python/langchain/agents/create_agent).
 
-The split is: `ModelRetryMiddleware`_ handles transient 429 stalls by
+The split is: [`ModelRetryMiddleware`](https://reference.langchain.com/python/langchain/agents/middleware/model_retry/ModelRetryMiddleware) handles transient 429 stalls by
 waiting and retrying the same model; this module handles **permanent
 credit/billing** failures by skipping the provider and switching models
-(like `ModelFallbackMiddleware`_, but with a circuit-breaker that avoids
+(like [`ModelFallbackMiddleware`](https://reference.langchain.com/python/langchain/agents/middleware/model_fallback/ModelFallbackMiddleware), but with a circuit-breaker that avoids
 rebuilding the failed provider).  Use them together.
 
 Usage
@@ -196,7 +189,7 @@ class ExhaustedProviderError(Exception):
 class ExhaustedProviderCallback(BaseCallbackHandler):
     """LangChain callback that detects credit/billing errors from LLM providers.
 
-    This is a `BaseCallbackHandler`_ that you attach to a model instance via
+    This is a [`BaseCallbackHandler`](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.BaseCallbackHandler.html) that you attach to a model instance via
     ``model.callbacks = [callback]``.  LangChain's callback system then invokes
     the handler's ``on_llm_error`` automatically whenever a call to that model
     raises an exception.  When the error matches a known credit/billing
@@ -235,7 +228,7 @@ class ExhaustedProviderCallback(BaseCallbackHandler):
         """Invoked by LangChain when a model call raises an exception.
 
         LangChain calls this automatically through the callback list attached
-        to the model (the ``on_llm_error`` hook of `BaseCallbackHandler`_).
+        to the model (the ``on_llm_error`` hook of [`BaseCallbackHandler`](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.BaseCallbackHandler.html)).
         If the error message matches a known credit/billing pattern, the
         provider is marked exhausted (via :func:`mark_provider_exhausted`) and
         a ``model_credit_balance_exhausted`` warning is logged so operators
@@ -325,9 +318,9 @@ def model_with_fallbacks(
 ) -> "BaseChatModel":
     """Create a model with a baked-in fallback chain and circuit-breaker guard.
 
-    The returned object is a LangChain `RunnableWithFallbacks`_ wrapping a
+    The returned object is a LangChain [`RunnableWithFallbacks`](https://api.python.langchain.com/en/stable/runnables/langchain_core.runnables.fallbacks.RunnableWithFallbacks.html) wrapping a
     primary model and ordered fallback models.  Pass it directly to
-    `create_agent`_ ``(model=...)`` — no `ModelFallbackMiddleware`_ needed.
+    [`create_agent`](https://docs.langchain.com/oss/python/langchain/agents/create_agent) ``(model=...)`` — no [`ModelFallbackMiddleware`](https://reference.langchain.com/python/langchain/agents/middleware/model_fallback/ModelFallbackMiddleware) needed.
 
     If the primary provider is already marked as exhausted (from a prior call
     anywhere in the process), the first available non-exhausted fallback is
@@ -346,7 +339,7 @@ def model_with_fallbacks(
             caller must set ``model_builder`` (required for circuit breaker).
 
     Returns:
-        A ``BaseChatModel`` (or `RunnableWithFallbacks`_ wrapping one).
+        A ``BaseChatModel`` (or [`RunnableWithFallbacks`](https://api.python.langchain.com/en/stable/runnables/langchain_core.runnables.fallbacks.RunnableWithFallbacks.html) wrapping one).
     """
     if model_builder is None:
         raise ValueError(

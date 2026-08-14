@@ -74,7 +74,7 @@ if content is None:
 
 ## Step 5: Merge parallel results without duplicates
 
-You fan out to parallel subagents, one per ticker, using [`Send`](https://docs.langchain.com/oss/python/langgraph/reference/types#langgraph.types.Send). Their results come back in random order. A plain [`operator.add`](https://docs.python.org/3/library/operator.html#operator.add) would duplicate a row whenever a later node updates an existing entry (for example, a persist node flips `persisted=True`). `state_reducers` upserts by `task_id` so updates merge in place.
+You fan out to parallel subagents, one per ticker, using [`Send`](https://docs.langchain.com/oss/python/langgraph/reference/types#langgraph.types.Send). Their results come back in random order. A plain [`operator.add`](https://docs.python.org/3/library/operator.html#operator.add) would duplicate a row whenever a later node updates an existing entry (for example, a persist node flips `persisted=True`). `state_reducers` upserts by `envelope_id` so updates merge in place.
 
 ```python
 from typing import Annotated

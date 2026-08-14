@@ -98,7 +98,7 @@ See [examples/json_output_parser.py](examples/json_output_parser.py) for a runna
 
 **The problem.** When `Send` fan-out dispatches parallel workers, their results merge back into the shared graph state in non-deterministic order. A plain `operator.add` duplicates rows whenever a later node updates an existing entry.
 
-**How this bite helps.** `envelope_reducer` upserts result entries by a stable key (`task_id`, falling back to `worker:as_of`). Updates merge in place instead of appending duplicates.
+**How this bite helps.** `envelope_reducer` upserts result entries by a stable key (`envelope_id`, falling back to `worker:as_of`). Updates merge in place instead of appending duplicates.
 
 ```python
 from typing import Annotated

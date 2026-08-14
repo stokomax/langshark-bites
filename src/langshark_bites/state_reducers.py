@@ -5,7 +5,7 @@ into the shared graph state in non-deterministic order.  Plain ``operator.add``
 would duplicate rows whenever a later node updates an existing entry (e.g. a
 persist node flipping ``persisted=True`` on an already-collected result).
 
-``envelope_reducer`` upserts result entries by a stable key (``task_id``,
+``envelope_reducer`` upserts result entries by a stable key (``envelope_id``,
 falling back to ``worker:as_of``) so updates merge in place instead of
 appending duplicates.
 
@@ -17,8 +17,9 @@ Usage in a LangGraph state schema::
     class State(TypedDict):
         collected_outputs: Annotated[list[dict], envelope_reducer]
 
-Consumers MUST key by ``task_id`` and never by list position — the returned
-list order is insertion order of first-seen keys and is not meaningful.
+Consumers MUST key by ``envelope_id`` and never by list position — the
+returned list order is insertion order of first-seen keys and is not
+meaningful.
 """
 
 from __future__ import annotations
@@ -30,12 +31,12 @@ def envelope_reducer(
     existing: list[dict[str, Any]],
     new: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Upsert result envelopes by ``task_id``.  Later entries win field-wise.
+    """Upsert result envelopes by ``envelope_id``.  Later entries win field-wise.
 
     Replaces plain ``operator.add`` so persist nodes can update
     ``persisted=True`` (and drop ``structured``) without duplicating rows.
-    Order of the returned list is insertion order of first-seen task_ids
-    and is NOT meaningful — always key by task_id.
+    Order of the returned list is insertion order of first-seen envelope_ids
+    and is NOT meaningful — always key by envelope_id.
 
     Args:
         existing: The current accumulated list in graph state.
@@ -51,7 +52,7 @@ def envelope_reducer(
     order: list[str] = []
 
     def _tid(entry: dict[str, Any]) -> str:
-        tid = entry.get("task_id") or ""
+        tid = entry.get("envelope_id") or ""
         if tid:
             return tid
         return f"{entry.get('worker', '')}:{entry.get('as_of', '')}"

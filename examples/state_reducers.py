@@ -21,15 +21,15 @@ def main() -> None:
     # State accumulated so far. A persist node has already marked one entry
     # as persisted.
     existing = [
-        {"task_id": "a", "worker": "w1", "status": "ok", "persisted": False},
-        {"task_id": "b", "worker": "w2", "status": "ok", "persisted": True},
+        {"envelope_id": "a", "worker": "w1", "status": "ok", "persisted": False},
+        {"envelope_id": "b", "worker": "w2", "status": "ok", "persisted": True},
     ]
 
-    # A new batch of results from a parallel worker. It updates task "a"
-    # (marking it persisted) and adds a new task "c".
+    # A new batch of results from a parallel worker. It updates envelope "a"
+    # (marking it persisted) and adds a new envelope "c".
     new = [
-        {"task_id": "a", "worker": "w1", "status": "ok", "persisted": True},
-        {"task_id": "c", "worker": "w3", "status": "ok", "persisted": False},
+        {"envelope_id": "a", "worker": "w1", "status": "ok", "persisted": True},
+        {"envelope_id": "c", "worker": "w3", "status": "ok", "persisted": False},
     ]
 
     merged = envelope_reducer(existing, new)
@@ -38,12 +38,12 @@ def main() -> None:
     for entry in merged:
         print(" ", entry)
 
-    # With a plain operator.add, task "a" would appear twice. The reducer
-    # upserts by task_id, so it appears once with persisted=True.
+    # With a plain operator.add, envelope "a" would appear twice. The reducer
+    # upserts by envelope_id, so it appears once with persisted=True.
     assert len(merged) == 3
-    assert [e["task_id"] for e in merged] == ["a", "b", "c"]
+    assert [e["envelope_id"] for e in merged] == ["a", "b", "c"]
     assert merged[0]["persisted"] is True
-    print("no duplicates: task 'a' updated in place")
+    print("no duplicates: envelope 'a' updated in place")
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ sleep and logger are mocked so the tests are fast and deterministic.
 
 from __future__ import annotations
 
+from datetime import UTC
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -59,7 +60,7 @@ async def test_logs_warning_when_delay_exceeds_threshold(mock_warning, mock_slee
 @patch("langshark_bites.api_backoff.asyncio.sleep", new_callable=AsyncMock)
 @patch("langshark_bites.api_backoff.log.warning")
 async def test_context_defaults_to_empty(mock_warning, mock_sleep):
-    """context is optional and defaults to an empty string."""
+    """Context is optional and defaults to an empty string."""
     await async_backoff(10.0)
 
     mock_sleep.assert_awaited_once_with(10.0)
@@ -97,12 +98,10 @@ def test_retry_after_unparseable_returns_none():
 
 
 def test_retry_after_http_date():
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
-    retry_at = datetime.now(timezone.utc) + timedelta(seconds=60)
-    r = _Resp(
-        {"Retry-After": retry_at.strftime("%a, %d %b %Y %H:%M:%S GMT")}
-    )
+    retry_at = datetime.now(UTC) + timedelta(seconds=60)
+    r = _Resp({"Retry-After": retry_at.strftime("%a, %d %b %Y %H:%M:%S GMT")})
     secs = retry_after_seconds(r)
     assert secs is not None
     assert 55.0 <= secs <= 65.0

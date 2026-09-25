@@ -6,6 +6,8 @@ Each bite solves one specific problem you run into when building multi-agent sys
 
 **Documentation:** [https://stokomax.github.io/langshark-bites/](https://stokomax.github.io/langshark-bites/)
 
+**Integrating into an existing project:** see the [Integrating guide](https://stokomax.github.io/langshark-bites/integrating/) — a single reference (written for AI coding agents) covering which install you need, where each bite plugs in, and how to verify.
+
 ## The bites at a glance
 
 | Bite | Problem it solves | Key API |
@@ -16,6 +18,7 @@ Each bite solves one specific problem you run into when building multi-agent sys
 | `json_output_parser` | Models that reject `response_format` return free-text JSON | `extract_structured_from_messages` |
 | `state_reducers` | Parallel workers duplicate rows when merging into graph state | `envelope_reducer` |
 | `observability` | You can't see what a supervisor delegated or why a run was slow | `init_phoenix`, `agent_span`, `chain_span`, `tool_span` |
+| `a2a_completion_notifier` | A separate subagent server never notifies the supervisor it finished | `build_push_config` (supervisor), `A2APushNotifierMiddleware` (emitter), `create_receiver_app` + `MailboxDrainMiddleware` (receiver) |
 
 ## Installation
 
@@ -24,6 +27,22 @@ uv add langshark-bites
 # or
 pip install langshark-bites
 ```
+
+The base package covers every bite **except** `a2a_completion_notifier`. Its
+package imports the FastAPI receiver at import time, so even using just the
+emitter middleware requires the extra's dependencies:
+
+```bash
+# For the a2a_completion_notifier bite (fastapi, mcp[cli], uvicorn[standard]):
+uv add "langshark-bites[a2a-notifier]"
+```
+
+### Which install you need
+
+| Bite | Install command |
+|---|---|
+| `api_rate_limiter`, `api_backoff`, `provider_failover`, `json_output_parser`, `state_reducers`, `observability` | `uv add langshark-bites` |
+| `a2a_completion_notifier` | `uv add "langshark-bites[a2a-notifier]"` |
 
 ## The bites
 
@@ -38,9 +57,9 @@ from langshark_bites.api_rate_limiter import RateLimiter, rate_limited
 
 limiter = RateLimiter.from_env()
 
+
 @rate_limited(limiter, provider="newsapi")
-async def fetch_news(ticker: str):
-    ...
+async def fetch_news(ticker: str): ...
 ```
 
 See [examples/rate_limiter.py](examples/rate_limiter.py) for a runnable example. Configure providers in a YAML file; see [examples/rate_limits.example.yaml](examples/rate_limits.example.yaml) for the schema.
@@ -104,6 +123,7 @@ See [examples/json_output_parser.py](examples/json_output_parser.py) for a runna
 from typing import Annotated
 from langshark_bites.state_reducers import envelope_reducer
 
+
 class State(TypedDict):
     collected_outputs: Annotated[list[dict], envelope_reducer]
 ```
@@ -127,6 +147,46 @@ async def run_worker(agent_name: str, as_of: str, ...):
 ```
 
 See [examples/observability.py](examples/observability.py) for a runnable example.
+
+### `a2a_completion_notifier`
+
+**The problem.** When you split a multi-agent system across two Agent Server deployments — a supervisor on one, subagents on another — the supervisor has no built-in way to learn when a subagent finishes. LangChain's async-subagent protocol is poll-based, and its A2A support does *not* implement the push side (`TaskPushNotificationConfig`/`SubscribeToTask` return `-32601`). Nothing emits the completion webhook, and nothing receives it.
+
+**How this bite helps.** It provides both missing halves of A2A push notifications for a split deployment: an emitter that sends the completion webhook, and a receiver that accepts it on the supervisor side.
+
+The **emitter** is `AgentMiddleware` for the subagent graph. On terminal run state it signs an A2A push notification (RS256 + JWKS) and POSTs it to the supervisor's registered webhook — middleware, not a tool, so it fires unconditionally on completion *and* on errors.
+
+The **receiver** is a FastAPI process next to the supervisor. It authenticates and deduplicates the incoming notification, unseals the opaque callback token, and delivers it into the supervisor's context via the Store + drain pattern. The receiver can be packaged as an **MCP server** with diagnostic tools, and it starts and stops with the MCP client.
+
+The packaging follows where agent-to-agent delivery is heading: a supervisor should not have to poll for results. Instead, a process receives the push notification and hands it to the supervisor over a connection the two already share. Here that means one process that listens on a local HTTP port for the A2A webhook POSTs and, on the other side, holds the LangGraph SDK connection to the supervisor's Agent Server — the same arrangement Claude Code Channels ships. A2A's own push-delivery mechanism is specified in the protocol, but the Agent Server does not implement it yet, so this bite provides it until that lands.
+
+The receiver also exposes a fetch-only **result primitive** (`POST /a2a/result` / MCP `get_async_result`) — a sister to the async-agent framework's poll-based `check_async_task`. Because the notifier already proved the task is terminal, the supervisor fetches the full result in one on-demand call, never polluting its prompt with results it doesn't need.
+
+```python
+# Emitter (subagent side — in a dynamic graph factory)
+from langshark_bites.a2a_completion_notifier.middleware import (
+    build_a2a_notifier_from_config,
+)
+from langshark_bites.a2a_completion_notifier.push_client import PushClient
+from langshark_bites.a2a_completion_notifier.signer import A2ASigner
+
+
+def make_graph(config):
+    notifier = build_a2a_notifier_from_config(
+        config,
+        signer=A2ASigner(pem, kid="subagent-1", issuer=..., audience=...),
+        push_client=PushClient(),
+    )
+    return create_agent(model=..., tools=..., middleware=[notifier])
+```
+
+```python
+# Receiver (supervisor side)
+from langshark_bites.a2a_completion_notifier.receiver import create_receiver_app
+from langshark_bites.a2a_completion_notifier.settings import ReceiverSettings
+
+app = create_receiver_app(settings=ReceiverSettings.from_env())
+```
 
 ## Configuration
 

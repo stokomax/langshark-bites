@@ -1,5 +1,4 @@
-"""langshark-bites — bite-size add-ons and wrappers for building durable and
-scalable LangChain multi-agent solutions.
+"""Bite-size add-ons and wrappers for durable, scalable LangChain multi-agent solutions.
 
 This package provides small, reusable, project-agnostic building blocks:
 
@@ -15,7 +14,18 @@ This package provides small, reusable, project-agnostic building blocks:
   accumulation).
 - ``observability`` — tracing backends (Phoenix/OpenInference today) with
   span decorators for agents, chains, and tools.
+- ``a2a_completion_notifier`` — A2A push completion notifications between
+  split LangGraph deployments: a subagent-side emitter middleware and a
+  supervisor-side receiver, packaged as an MCP server.
 """
+
+try:
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as _package_version
+
+    __version__ = _package_version("langshark-bites")
+except PackageNotFoundError:  # pragma: no cover - not installed (e.g. raw src checkout)
+    __version__ = "0.0.0"
 
 from .api_backoff import async_backoff, retry_after_seconds
 from .api_rate_limiter import RateLimitConfig, RateLimiter, rate_limited
@@ -41,25 +51,25 @@ from .provider_failover import (
 from .state_reducers import envelope_reducer
 
 __all__ = [
-    "RateLimiter",
-    "RateLimitConfig",
-    "rate_limited",
+    "agent_span",
+    "async_backoff",
+    "chain_span",
+    "create_model_with_fallback",
+    "envelope_reducer",
     "ExhaustedProviderCallback",
     "ExhaustedProviderError",
-    "create_model_with_fallback",
+    "extract_structured_from_messages",
+    "init_phoenix",
     "is_fallback_error",
     "is_provider_exhausted",
     "mark_provider_exhausted",
     "model_with_fallbacks",
     "on_provider_exhausted",
-    "async_backoff",
-    "retry_after_seconds",
-    "envelope_reducer",
-    "extract_structured_from_messages",
-    "init_phoenix",
     "phoenix_get_tracer",
     "phoenix_is_initialized",
-    "agent_span",
-    "chain_span",
+    "rate_limited",
+    "RateLimitConfig",
+    "RateLimiter",
+    "retry_after_seconds",
     "tool_span",
 ]

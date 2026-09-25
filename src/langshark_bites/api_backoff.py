@@ -25,6 +25,9 @@ can adapt it to their own project's needs.
 from __future__ import annotations
 
 import asyncio
+import datetime
+from email.utils import parsedate_to_datetime
+from typing import Any
 
 import structlog
 
@@ -37,8 +40,9 @@ async def async_backoff(
     context: str = "",
     warning_threshold_sec: float = 10.0,
 ) -> None:
-    """Sleep *delay_sec* seconds, logging WARNING if the delay exceeds
-    ``warning_threshold_sec``.
+    """Sleep *delay_sec* seconds, logging a WARNING for long delays.
+
+    Emits the WARNING when the delay exceeds ``warning_threshold_sec``.
 
     Args:
         delay_sec: The number of seconds to sleep (non-blocking async sleep).
@@ -58,7 +62,7 @@ async def async_backoff(
     await asyncio.sleep(delay_sec)
 
 
-def retry_after_seconds(response) -> float | None:
+def retry_after_seconds(response: Any) -> float | None:
     """Return the wait time (seconds) from an HTTP response's ``Retry-After``.
 
     Accepts any object with a ``.headers`` mapping (for example
@@ -79,8 +83,6 @@ def retry_after_seconds(response) -> float | None:
         wait = retry_after_seconds(response) or 30.0
         await async_backoff(wait, context="NewsAPI retry 1/3")
     """
-    from email.utils import parsedate_to_datetime
-
     headers = getattr(response, "headers", None)
     if headers is None:
         return None
@@ -99,12 +101,9 @@ def retry_after_seconds(response) -> float | None:
     try:
         retry_at = parsedate_to_datetime(value)
         if retry_at.tzinfo is None:
-            import datetime as _dt
+            retry_at = retry_at.replace(tzinfo=datetime.UTC)
 
-            retry_at = retry_at.replace(tzinfo=_dt.timezone.utc)
-        from datetime import datetime, timezone
-
-        now = datetime.now(timezone.utc)
+        now = datetime.datetime.now(datetime.UTC)
         return max(0.0, (retry_at - now).total_seconds())
-    except (TypeError, ValueError, OverflowError):
+    except TypeError, ValueError, OverflowError:
         return None

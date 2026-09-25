@@ -38,7 +38,7 @@ class TestExhaustedProviders:
 
     def test_on_provider_exhausted_callback(self):
         fired: list[str] = []
-        on_provider_exhausted(lambda p: fired.append(p))
+        on_provider_exhausted(fired.append)
         mark_provider_exhausted("openai")
         assert fired == ["openai"]
 
@@ -116,9 +116,7 @@ class TestModelWithFallbacks:
             requested.append(name)
             return object()
 
-        result = model_with_fallbacks(
-            "claude-sonnet-5", "deepseek-chat", model_builder=builder
-        )
+        result = model_with_fallbacks("claude-sonnet-5", "deepseek-chat", model_builder=builder)
         # Exhausted fallback dropped → only primary built, plain model returned
         assert requested == ["claude-sonnet-5"]
         assert not hasattr(result, "with_fallbacks")
@@ -135,8 +133,6 @@ class TestModelWithFallbacks:
         assert create_model_with_fallback is model_with_fallbacks
 
         # No fallbacks → plain model path, works via the alias too.
-        result = create_model_with_fallback(
-            "claude-sonnet-5", "", model_builder=builder
-        )
+        result = create_model_with_fallback("claude-sonnet-5", "", model_builder=builder)
         assert requested == ["claude-sonnet-5"]
         assert not hasattr(result, "with_fallbacks")

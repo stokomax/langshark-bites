@@ -45,12 +45,12 @@ from __future__ import annotations
 import functools
 import inspect
 from collections.abc import Callable
-from typing import Any, TypeVar
+from contextlib import ExitStack
+from typing import Any
 
 from langshark_bites.observability.phoenix.setup import phoenix_get_tracer
 
-F = TypeVar("F", bound=Callable[..., Any])
-Tags = dict[str, Any] | None
+type Tags = dict[str, Any] | None
 
 # OpenInference requires lowercase when kind is provided as a string.
 _KIND_AGENT = "agent"
@@ -74,7 +74,7 @@ def _bound_args(
         bound = inspect.signature(func).bind(*args, **kwargs)
         bound.apply_defaults()
         return bound.arguments
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return {}
 
 
@@ -102,48 +102,57 @@ def _resolve_span_name(
     return fn_name
 
 
-def agent_span(
+def agent_span[F: Callable[..., Any]](
     fn: F | None = None,
     /,
     *,
     default_override: str | None = None,
     parse_agent_name: bool = False,
     tags: Tags = None,
-) -> Any:
+) -> F | Callable[[F], F]:
     """Decorator: OpenInference AGENT span.  No-op if Phoenix uninitialized."""
     return _make_decorator(
-        _KIND_AGENT, fn, default_override=default_override,
-        parse_agent_name=parse_agent_name, tags=tags,
+        _KIND_AGENT,
+        fn,
+        default_override=default_override,
+        parse_agent_name=parse_agent_name,
+        tags=tags,
     )
 
 
-def chain_span(
+def chain_span[F: Callable[..., Any]](
     fn: F | None = None,
     /,
     *,
     default_override: str | None = None,
     parse_agent_name: bool = False,
     tags: Tags = None,
-) -> Any:
+) -> F | Callable[[F], F]:
     """Decorator: OpenInference CHAIN span.  No-op if Phoenix uninitialized."""
     return _make_decorator(
-        _KIND_CHAIN, fn, default_override=default_override,
-        parse_agent_name=parse_agent_name, tags=tags,
+        _KIND_CHAIN,
+        fn,
+        default_override=default_override,
+        parse_agent_name=parse_agent_name,
+        tags=tags,
     )
 
 
-def tool_span(
+def tool_span[F: Callable[..., Any]](
     fn: F | None = None,
     /,
     *,
     default_override: str | None = None,
     parse_agent_name: bool = False,
     tags: Tags = None,
-) -> Any:
+) -> F | Callable[[F], F]:
     """Decorator: OpenInference TOOL span.  No-op if Phoenix uninitialized."""
     return _make_decorator(
-        _KIND_TOOL, fn, default_override=default_override,
-        parse_agent_name=parse_agent_name, tags=tags,
+        _KIND_TOOL,
+        fn,
+        default_override=default_override,
+        parse_agent_name=parse_agent_name,
+        tags=tags,
     )
 
 
@@ -152,14 +161,14 @@ def tool_span(
 # ---------------------------------------------------------------------------
 
 
-def _make_decorator(
+def _make_decorator[F: Callable[..., Any]](
     span_kind: str,
     fn: F | None,
     *,
     default_override: str | None,
     parse_agent_name: bool,
     tags: Tags,
-) -> Any:
+) -> F | Callable[[F], F]:
     def decorator(func: F) -> F:
         is_async = inspect.iscoroutinefunction(func)
 
@@ -174,9 +183,7 @@ def _make_decorator(
                 span_name = _resolve_span_name(
                     default_override, func.__name__, parse_agent_name, bound
                 )
-                return await _invoke_async(
-                    tracer, span_name, span_kind, tags, func, args, kwargs
-                )
+                return await _invoke_async(tracer, span_name, span_kind, tags, func, args, kwargs)
 
             return async_wrapper  # type: ignore[return-value]
 
@@ -186,9 +193,7 @@ def _make_decorator(
             if tracer is None:
                 return func(*args, **kwargs)
             bound = _bound_args(func, args, kwargs)
-            span_name = _resolve_span_name(
-                default_override, func.__name__, parse_agent_name, bound
-            )
+            span_name = _resolve_span_name(default_override, func.__name__, parse_agent_name, bound)
             return _invoke_sync(tracer, span_name, span_kind, tags, func, args, kwargs)
 
         return sync_wrapper  # type: ignore[return-value]
@@ -198,10 +203,8 @@ def _make_decorator(
     return decorator
 
 
-def _span_cm(tracer: Any, span_name: str, span_kind: str, tags: Tags):
+def _span_cm(tracer: Any, span_name: str, span_kind: str, tags: Tags) -> ExitStack:
     """Build nested context managers: optional tags + agent/chain/tool span."""
-    from contextlib import ExitStack
-
     stack = ExitStack()
     if tags:
         try:

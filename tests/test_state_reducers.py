@@ -28,7 +28,7 @@ class TestEnvelopeReducer:
         assert result[0]["summary"] == "new"
 
     def test_preserves_structured_when_update_omits_it(self):
-        """structured is preserved from existing when the update doesn't set it."""
+        """Structured is preserved from existing when the update doesn't set it."""
         existing = [
             {"envelope_id": "a", "worker": "w1", "structured": {"x": 1}, "persisted": False}
         ]

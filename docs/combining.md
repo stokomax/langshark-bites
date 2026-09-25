@@ -23,9 +23,9 @@ from langshark_bites.api_rate_limiter import RateLimiter, rate_limited
 
 limiter = RateLimiter.from_env()
 
+
 @rate_limited(limiter, provider="newsapi")
-async def fetch_news(ticker: str) -> str:
-    ...
+async def fetch_news(ticker: str) -> str: ...
 ```
 
 ## Step 2: Back off and log when you still get throttled
@@ -35,12 +35,13 @@ Even with rate limiting, you can still get a 429. For example, the news API has 
 ```python
 from langshark_bites.api_backoff import async_backoff
 
+
 async def fetch_news_with_retry(ticker: str) -> str:
     for attempt in range(1, 4):
         try:
             return await fetch_news(ticker)
         except ThrottledError:
-            await async_backoff(2 ** attempt, context=f"newsapi retry {attempt}/3")
+            await async_backoff(2**attempt, context=f"newsapi retry {attempt}/3")
 ```
 
 `api_rate_limiter` reduces how often you hit the limit. `api_backoff` handles the residual cases where you still get throttled. They are two halves of the same concern.
@@ -79,6 +80,7 @@ You fan out to parallel subagents, one per ticker, using [`Send`](https://docs.l
 ```python
 from typing import Annotated
 from langshark_bites.state_reducers import envelope_reducer
+
 
 class State(TypedDict):
     collected_outputs: Annotated[list[dict], envelope_reducer]

@@ -24,9 +24,9 @@ The algorithm is a token bucket: each provider is configured with a `capacity` (
 
   limiter = RateLimiter.from_env()
 
+
   @rate_limited(limiter, provider="newsapi")
-  async def fetch_news(ticker: str):
-      ...
+  async def fetch_news(ticker: str): ...
   ```
 - **Context manager** — limit just one block inside a function:
   ```python

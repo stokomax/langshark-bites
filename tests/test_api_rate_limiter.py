@@ -32,9 +32,7 @@ class TestRateLimitConfig:
         assert cfg.refill_rate == 1.0
 
     def test_from_rpm_with_max_concurrent(self):
-        cfg = RateLimitConfig.from_rpm(
-            "test", requests_per_minute=60, max_concurrent=5
-        )
+        cfg = RateLimitConfig.from_rpm("test", requests_per_minute=60, max_concurrent=5)
         assert cfg.max_concurrent == 5
 
 
@@ -87,9 +85,7 @@ class TestRateLimiter:
         """With no Redis, the in-process fallback should grant tokens immediately
         on first call (bucket starts full)."""
         config = RateLimitConfig.from_rpm("test", requests_per_minute=120)
-        limiter = RateLimiter(
-            redis_url="redis://localhost:6379/0", configs={"test": config}
-        )
+        limiter = RateLimiter(redis_url="redis://localhost:6379/0", configs={"test": config})
         # Patch _ensure_redis to always return False (force local fallback)
         limiter._ensure_redis = AsyncMock(return_value=False)  # type: ignore[method-assign]
 
@@ -101,9 +97,7 @@ class TestRateLimiter:
         """After consuming all burst tokens, further acquires should block."""
         burst = 3
         config = RateLimitConfig.from_rpm("test", requests_per_minute=60, burst=burst)
-        limiter = RateLimiter(
-            redis_url="redis://localhost:6379/0", configs={"test": config}
-        )
+        limiter = RateLimiter(redis_url="redis://localhost:6379/0", configs={"test": config})
         limiter._ensure_redis = AsyncMock(return_value=False)  # type: ignore[method-assign]
 
         # Acquire burst tokens — should all succeed immediately
@@ -119,9 +113,7 @@ class TestRateLimiter:
     async def test_rate_limited_decorator(self):
         """The @rate_limited decorator wraps and calls through."""
         config = RateLimitConfig.from_rpm("test", requests_per_minute=120)
-        limiter = RateLimiter(
-            redis_url="redis://localhost:6379/0", configs={"test": config}
-        )
+        limiter = RateLimiter(redis_url="redis://localhost:6379/0", configs={"test": config})
         limiter._ensure_redis = AsyncMock(return_value=False)  # type: ignore[method-assign]
 
         call_count = 0

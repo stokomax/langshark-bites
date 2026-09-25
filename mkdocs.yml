@@ -77,6 +77,8 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Combining the bites: combining.md
+  - Integrating langshark-bites: integrating.md
+  - "Tutorial: integrating with an AI agent": tutorial.md
   - API Reference:
       - api_rate_limiter: api_rate_limiter.md
       - api_backoff: api_backoff.md
@@ -84,9 +86,16 @@ nav:
       - json_output_parser: json_output_parser.md
       - state_reducers: state_reducers.md
       - observability: observability.md
+      - a2a_completion_notifier: a2a_completion_notifier.md
+  - Appendix:
+      - "a2a customization": a2a_completion_notifier_reference.md
+      - "a2a troubleshooting & internals": a2a_completion_notifier_plumbing.md
 
 extra_css:
   - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/mermaid.mjs
 
 extra:
   social:

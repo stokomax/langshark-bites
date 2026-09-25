@@ -22,20 +22,20 @@ Each bite solves one specific problem you run into when building multi-agent sys
 
 ## Installation
 
-Releases are published to [GitHub Packages](https://github.com/stokomax/langshark-bites/packages)
-(PyPI registry), not to pypi.org. GitHub Packages requires authentication for
-**every** install, including public repos — a `GITHUB_TOKEN` (in Actions) or a
-personal access token with `read:packages` scope (locally).
+`langshark-bites` is not published to pypi.org. Each push to `main` that bumps
+the version in `pyproject.toml` publishes a [GitHub Release](https://github.com/stokomax/langshark-bites/releases)
+tagged `v<version>` with the built wheel and sdist attached. Install directly
+from the release asset URL — no registry auth required for a public repo:
 
 ```bash
-# uv
-uv add --index https://pypi.pkg.github.com/stokomax/langshark-bites langshark-bites
-# requires a PAT with read:packages, e.g. via UV_INDEX_<NAME>_PASSWORD or netrc
+# uv — pin to a specific release tag/version
+uv add "https://github.com/stokomax/langshark-bites/releases/download/v1.0.0/langshark_bites-1.0.0-py3-none-any.whl"
 
 # pip
-pip install langshark-bites \
-  --index-url https://<username>:<token>@pypi.pkg.github.com/stokomax/langshark-bites/simple/
+pip install "https://github.com/stokomax/langshark-bites/releases/download/v1.0.0/langshark_bites-1.0.0-py3-none-any.whl"
 ```
+
+Check the [releases page](https://github.com/stokomax/langshark-bites/releases) for the latest tag and asset filenames.
 
 The base package covers every bite **except** `a2a_completion_notifier`. Its
 package imports the FastAPI receiver at import time, so even using just the
@@ -43,15 +43,15 @@ emitter middleware requires the extra's dependencies:
 
 ```bash
 # For the a2a_completion_notifier bite (fastapi, mcp[cli], uvicorn[standard]):
-uv add --index https://pypi.pkg.github.com/stokomax/langshark-bites "langshark-bites[a2a-notifier]"
+uv add "langshark-bites[a2a-notifier] @ https://github.com/stokomax/langshark-bites/releases/download/v1.0.0/langshark_bites-1.0.0-py3-none-any.whl"
 ```
 
 ### Which install you need
 
 | Bite | Install command |
 |---|---|
-| `api_rate_limiter`, `api_backoff`, `provider_failover`, `json_output_parser`, `state_reducers`, `observability` | `uv add --index https://pypi.pkg.github.com/stokomax/langshark-bites langshark-bites` |
-| `a2a_completion_notifier` | `uv add --index https://pypi.pkg.github.com/stokomax/langshark-bites "langshark-bites[a2a-notifier]"` |
+| `api_rate_limiter`, `api_backoff`, `provider_failover`, `json_output_parser`, `state_reducers`, `observability` | `uv add "https://github.com/stokomax/langshark-bites/releases/download/v1.0.0/langshark_bites-1.0.0-py3-none-any.whl"` |
+| `a2a_completion_notifier` | `uv add "langshark-bites[a2a-notifier] @ https://github.com/stokomax/langshark-bites/releases/download/v1.0.0/langshark_bites-1.0.0-py3-none-any.whl"` |
 
 ## The bites
 

@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 concurrency:
   group: publish-${{ github.ref }}
@@ -34,12 +33,11 @@ jobs:
         run: uv run pytest
 
   publish:
-    name: Publish to GitHub Packages
+    name: Publish GitHub Release
     needs: test
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
+      contents: write
     steps:
       - uses: actions/checkout@v5
         with:
@@ -76,18 +74,33 @@ jobs:
             echo "publish=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build wheel & sdist
+      - name: Check if tag already exists
         if: steps.should-publish.outputs.publish == 'true'
+        id: tag-check
+        run: |
+          TAG="v${{ steps.version.outputs.current }}"
+          if git ls-remote --tags origin "refs/tags/$TAG" | grep -q "$TAG"; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Build wheel & sdist
+        if: steps.should-publish.outputs.publish == 'true' && steps.tag-check.outputs.exists == 'false'
         run: uv build
 
       - name: Verify artifacts
-        if: steps.should-publish.outputs.publish == 'true'
+        if: steps.should-publish.outputs.publish == 'true' && steps.tag-check.outputs.exists == 'false'
         run: ls -la dist/
 
-      - name: Publish to GitHub Packages
-        if: steps.should-publish.outputs.publish == 'true'
+      - name: Create GitHub Release
+        if: steps.should-publish.outputs.publish == 'true' && steps.tag-check.outputs.exists == 'false'
         env:
-          UV_PUBLISH_URL: https://pypi.pkg.github.com/stokomax/langshark-bites/
-          UV_PUBLISH_USERNAME: ${{ github.actor }}
-          UV_PUBLISH_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-        run: uv publish dist/*
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.tag-check.outputs.tag }}" \
+            dist/* \
+            --repo "${{ github.repository }}" \
+            --title "${{ steps.tag-check.outputs.tag }}" \
+            --generate-notes

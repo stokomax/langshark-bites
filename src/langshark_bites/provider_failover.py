@@ -75,15 +75,18 @@ Usage
 from __future__ import annotations
 
 from contextlib import suppress
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import structlog
 from langchain_core.callbacks.base import BaseCallbackHandler
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from langchain_core.language_models.chat_models import BaseChatModel
 
 log = structlog.get_logger(__name__)
+
 
 def _provider_of(model_name: str) -> str:
     """Return the provider key for a model name (private helper).
@@ -92,7 +95,7 @@ def _provider_of(model_name: str) -> str:
     first ``-``, e.g. ``"claude-sonnet-4-5"`` -> ``"claude"``.  Centralized
     here so callers never embed this parsing.
     """
-    return model_name.split("-")[0]
+    return model_name.split("-", maxsplit=1)[0]
 
 
 # ---------------------------------------------------------------------------
@@ -111,7 +114,7 @@ class _ExhaustedProviders:
     ``on_exhausted(callback)`` to clear their caches when a provider goes down.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._providers: set[str] = set()
         self._callbacks: list[Callable[[str], None]] = []
 
@@ -155,7 +158,7 @@ def mark_provider_exhausted(provider: str) -> None:
     _exhausted.add(provider)
 
 
-def on_provider_exhausted(callback):
+def on_provider_exhausted(callback: Callable[[str], None]) -> None:
     """Register a callback invoked when any provider is marked exhausted.
 
     The callback receives the provider key (e.g. ``"claude"``).  Use this to
@@ -172,7 +175,8 @@ def on_provider_exhausted(callback):
 class ExhaustedProviderError(Exception):
     """Raised when creating a model for an exhausted provider."""
 
-    def __init__(self, provider: str, model_name: str):
+    def __init__(self, provider: str, model_name: str) -> None:
+        """Record the exhausted ``provider`` and the ``model_name`` refused."""
         self.provider = provider
         self.model_name = model_name
         super().__init__(
@@ -209,7 +213,13 @@ class ExhaustedProviderCallback(BaseCallbackHandler):
         self,
         model_name: str,
         extra_patterns: list[str] | None = None,
-    ):
+    ) -> None:
+        """Watch ``model_name`` for credit-exhaustion errors.
+
+        Args:
+            model_name: The model whose provider is marked exhausted on match.
+            extra_patterns: Additional lowercase substrings to match.
+        """
         self._model_name = model_name
         self._provider = _provider_of(model_name)
         self._patterns = [
@@ -267,11 +277,13 @@ def _pick_fallback_exc_types() -> tuple[type[Exception], ...]:
     exc_types: list[type[Exception]] = []
     try:
         from anthropic import AuthenticationError, BadRequestError, PermissionDeniedError
+
         exc_types.extend([BadRequestError, AuthenticationError, PermissionDeniedError])
     except ImportError:
         pass
     try:
         from openai import AuthenticationError, BadRequestError, PermissionDeniedError
+
         exc_types.extend([BadRequestError, AuthenticationError, PermissionDeniedError])
     except ImportError:
         pass
@@ -314,8 +326,8 @@ def model_with_fallbacks(
     primary_name: str,
     fallbacks_csv: str,
     max_tokens: int = 8192,
-    model_builder: Callable[[str, int], "BaseChatModel"] | None = None,
-) -> "BaseChatModel":
+    model_builder: Callable[..., BaseChatModel] | None = None,
+) -> Any:
     """Create a model with a baked-in fallback chain and circuit-breaker guard.
 
     The returned object is a LangChain [`RunnableWithFallbacks`](https://api.python.langchain.com/en/stable/runnables/langchain_core.runnables.fallbacks.RunnableWithFallbacks.html) wrapping a
@@ -342,9 +354,7 @@ def model_with_fallbacks(
         A ``BaseChatModel`` (or [`RunnableWithFallbacks`](https://api.python.langchain.com/en/stable/runnables/langchain_core.runnables.fallbacks.RunnableWithFallbacks.html) wrapping one).
     """
     if model_builder is None:
-        raise ValueError(
-            "model_builder is required — pass your create_model function."
-        )
+        raise ValueError("model_builder is required — pass your create_model function.")
 
     fallback_names = [n.strip() for n in fallbacks_csv.split(",") if n.strip()]
 
@@ -362,10 +372,7 @@ def model_with_fallbacks(
         primary_name = promoted
 
     # ---- Also skip exhausted fallbacks -------------------------------------
-    fallback_names = [
-        n for n in fallback_names
-        if not _exhausted.exhausted(_provider_of(n))
-    ]
+    fallback_names = [n for n in fallback_names if not _exhausted.exhausted(_provider_of(n))]
 
     primary = model_builder(primary_name, max_tokens=max_tokens)
 
@@ -377,9 +384,7 @@ def model_with_fallbacks(
         )
         return primary
 
-    fallback_models = [
-        model_builder(name, max_tokens=max_tokens) for name in fallback_names
-    ]
+    fallback_models = [model_builder(name, max_tokens=max_tokens) for name in fallback_names]
 
     log.info(
         "model_fallback_chain_configured",

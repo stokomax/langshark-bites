@@ -6,6 +6,9 @@
 
 - [Home](https://stokomax.github.io/langshark-bites/): Overview of the package, the bites at a glance, and installation.
 - [Combining the bites](https://stokomax.github.io/langshark-bites/combining/): A realistic end-to-end scenario showing how the bites work together.
+- [a2a_completion_notifier](https://stokomax.github.io/langshark-bites/a2a_completion_notifier/): Push completion notifications from subagent deployments to a supervisor via a 4-step full setup (emit middleware, receiver webhook, drain middleware, dispatch config) plus optional components that swap into it (supervisor drain + system prompt, result fetch). Key API: build_a2a_notifier_from_config, create_receiver_app, build_push_config, NotificationMailbox, MailboxDrainMiddleware, fetch_task_result.
+- [a2a_completion_notifier — customization](https://stokomax.github.io/langshark-bites/a2a_completion_notifier_reference/): Receiver packaging, A2A_VERIFY_MODE sender-auth table, receiver lifecycle, wake-input options, A2A_* env vars, HTTP/error surface, and the full API reference.
+- [a2a_completion_notifier — troubleshooting & internals](https://stokomax.github.io/langshark-bites/a2a_completion_notifier_plumbing/): Sequence/deployment/Store-drain diagrams, module topology, failure modes & troubleshooting, and the a2a_* log events. For support and debugging the notifier.
 - [api_rate_limiter](https://stokomax.github.io/langshark-bites/api_rate_limiter/): Distributed Redis-backed token-bucket rate limiter for external API calls. Key API: RateLimiter, RateLimitConfig, rate_limited.
 - [api_backoff](https://stokomax.github.io/langshark-bites/api_backoff/): Observable backoff sleep helper for retrying throttled external API calls. Key API: async_backoff.
 - [provider_failover](https://stokomax.github.io/langshark-bites/provider_failover/): Circuit breaker for exhausted LLM provider credit, plus model fallback-chain construction. Key API: model_with_fallbacks, ExhaustedProviderError, ExhaustedProviderCallback, is_fallback_error, is_provider_exhausted, mark_provider_exhausted, on_provider_exhausted.
@@ -21,4 +24,5 @@
 - [json_output_parser.py](https://github.com/stokomax/langshark-bites/blob/main/examples/json_output_parser.py): Runnable example for json_output_parser.
 - [state_reducers.py](https://github.com/stokomax/langshark-bites/blob/main/examples/state_reducers.py): Runnable example for state_reducers.
 - [observability.py](https://github.com/stokomax/langshark-bites/blob/main/examples/observability.py): Runnable example for observability.
+- [a2a_completion_notifier.py](https://github.com/stokomax/langshark-bites/blob/main/examples/a2a_completion_notifier.py): Runnable example for a2a_completion_notifier.
 - [rate_limits.example.yaml](https://github.com/stokomax/langshark-bites/blob/main/examples/rate_limits.example.yaml): Rate-limit configuration schema.

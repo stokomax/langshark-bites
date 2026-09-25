@@ -15,6 +15,7 @@ Here is how [`Send`](https://docs.langchain.com/oss/python/langgraph/reference/t
 ```python
 from langgraph.types import Send
 
+
 def fan_out(state):
     # One task per unit of work, each running the "process" node.
     return [Send("process", {"key": k}) for k in state["items"]]

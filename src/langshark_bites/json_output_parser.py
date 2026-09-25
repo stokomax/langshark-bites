@@ -35,8 +35,42 @@ log = structlog.get_logger(__name__)
 _MAX_DUMP_LEN = 600
 
 
+def _scan_string_char(ch: str, escape: bool) -> tuple[bool, bool]:
+    """Advance string-literal state for one character.
+
+    Returns:
+        ``(still_in_string, next_escape)``.
+    """
+    if escape:
+        return True, False
+    if ch == "\\":
+        return True, True
+    if ch == '"':
+        return False, False
+    return True, False
+
+
+def _update_container_depth(ch: str, depth_brace: int, depth_bracket: int) -> tuple[int, int, bool]:
+    """Update brace/bracket depth for one non-string character.
+
+    Returns:
+        ``(depth_brace, depth_bracket, entered_string)``.
+    """
+    if ch == '"':
+        return depth_brace, depth_bracket, True
+    if ch == "{":
+        return depth_brace + 1, depth_bracket, False
+    if ch == "}":
+        return depth_brace - 1, depth_bracket, False
+    if ch == "[":
+        return depth_brace, depth_bracket + 1, False
+    if ch == "]":
+        return depth_brace, depth_bracket - 1, False
+    return depth_brace, depth_bracket, False
+
+
 def _extract_all_json_objects(text: str, include_unclosed: bool = False) -> list[str]:
-    """Extract *all* top-level JSON values (object or array) from *text*.
+    r"""Extract *all* top-level JSON values (object or array) from *text*.
 
     Uses a character-by-character brace/bracket depth scanner that correctly
     handles arbitrary nesting, string literals (including escaped quotes), and
@@ -64,39 +98,26 @@ def _extract_all_json_objects(text: str, include_unclosed: bool = False) -> list
 
     for i, ch in enumerate(text):
         if in_string:
-            if escape:
-                escape = False
-            elif ch == "\\":
-                escape = True
-            elif ch == '"':
-                in_string = False
+            in_string, escape = _scan_string_char(ch, escape)
             continue
 
         if start == -1:
-            if ch in ("{", "["):
-                start = i
-                if ch == "{":
-                    depth_brace = 1
-                else:
-                    depth_bracket = 1
+            if ch == "{":
+                start, depth_brace, depth_bracket = i, 1, 0
+            elif ch == "[":
+                start, depth_brace, depth_bracket = i, 0, 1
             continue
 
-        # We are inside the top-level container
-        if ch == '"':
+        depth_brace, depth_bracket, entered = _update_container_depth(
+            ch, depth_brace, depth_bracket
+        )
+        if entered:
             in_string = True
             escape = False
-        elif ch == "{":
-            depth_brace += 1
-        elif ch == "}":
-            depth_brace -= 1
-        elif ch == "[":
-            depth_bracket += 1
-        elif ch == "]":
-            depth_bracket -= 1
+            continue
 
         if depth_brace == 0 and depth_bracket == 0:
             results.append(text[start : i + 1])
-            # Reset to scan for further top-level containers
             start = -1
             depth_brace = 0
             depth_bracket = 0
@@ -180,7 +201,7 @@ def extract_structured_from_messages(
         except json.JSONDecodeError:
             # Second pass: json_repair handles common LLM defects
             try:
-                import json_repair  # type: ignore[import-untyped]
+                import json_repair
 
                 data = json_repair.repair_json(raw, return_objects=True)
             except Exception as repair_exc:

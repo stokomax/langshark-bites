@@ -183,9 +183,7 @@ class TestDecoratorsWithTracer:
         assert result == "daily_signal_analysis:2026-07-10"
         assert len(spans) == 1
         assert spans[0]["openinference_span_kind"] == "agent"
-        assert meta_seen == [
-            {"agent": "daily_signal_analysis", "as_of": "2026-07-10"}
-        ]
+        assert meta_seen == [{"agent": "daily_signal_analysis", "as_of": "2026-07-10"}]
 
     def test_chain_and_tool_kinds(self, mock_tracer):
         _, spans = mock_tracer

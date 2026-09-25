@@ -38,7 +38,8 @@ Providers are defined in a YAML file (preferred) or via environment
 variables.  There are NO baked-in providers — you define the ones your
 project needs.  See ``rate_limits.example.yaml`` for the schema.
 
-    RATE_LIMIT_CONFIG_PATH=/path/to/rate_limits.yaml   (default: ~/.config/langshark_bites/rate_limits.yaml)
+    RATE_LIMIT_CONFIG_PATH=/path/to/rate_limits.yaml
+        (default: ~/.config/langshark_bites/rate_limits.yaml)
 
     # Or per-provider env vars (override YAML):
     RATE_LIMIT_NEWSAPI_RPM=100
@@ -59,9 +60,13 @@ import asyncio
 import functools
 import os
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Optional, TypeVar
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import structlog
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 log = structlog.get_logger(__name__)
 
@@ -87,7 +92,7 @@ class RateLimitConfig:
     capacity: int  # max burst size (tokens in a full bucket)
     refill_rate: float  # tokens added per second
     acquire_timeout: float = 30.0  # max seconds a caller will wait for a token
-    max_concurrent: Optional[int] = None  # optional extra concurrency cap
+    max_concurrent: int | None = None  # optional extra concurrency cap
     source: str = ""  # provenance: "built-in default", "env: ...", or "YAML: ..."
 
     @classmethod
@@ -95,11 +100,11 @@ class RateLimitConfig:
         cls,
         name: str,
         requests_per_minute: int,
-        burst: Optional[int] = None,
+        burst: int | None = None,
         acquire_timeout: float = 30.0,
-        max_concurrent: Optional[int] = None,
+        max_concurrent: int | None = None,
         source: str = "",
-    ) -> "RateLimitConfig":
+    ) -> RateLimitConfig:
         """Convenience constructor from 'N requests per minute' spec."""
         return cls(
             name=name,
@@ -111,8 +116,87 @@ class RateLimitConfig:
         )
 
 
+def _load_yaml_providers(path: str) -> dict[str, Any]:
+    """Read the ``providers`` map from a YAML rate-limit config file."""
+    config_path = Path(path)
+    if not config_path.exists():
+        log.info("rate_limit_config_missing", path=path)
+        return {}
+    try:
+        import yaml
+
+        with config_path.open() as f:
+            data = yaml.safe_load(f) or {}
+        yaml_config = data.get("providers", {}) or {}
+        if not yaml_config:
+            log.warning("rate_limit_config_empty", path=path)
+        return yaml_config
+    except Exception:
+        log.error("rate_limit_config_parse_error", path=path, exc_info=True)
+        return {}
+
+
+def _discover_provider_names(yaml_config: dict[str, Any]) -> set[str]:
+    """Union of default, YAML, and env-declared provider names."""
+    names: set[str] = set(DEFAULT_PROVIDER_CONFIGS.keys())
+    names.update(yaml_config.keys())
+    for key in os.environ:
+        if key.startswith("RATE_LIMIT_") and key.endswith("_RPM"):
+            provider = key[len("RATE_LIMIT_") : -len("_RPM")].lower()
+            names.add(provider)
+    return names
+
+
+def _config_for_provider(
+    name: str,
+    *,
+    yaml_config: dict[str, Any],
+    path: str,
+) -> RateLimitConfig | None:
+    """Resolve one provider's RateLimitConfig from env > YAML > defaults."""
+    yaml_spec = yaml_config.get(name, {})
+    env_rpm = os.environ.get(f"RATE_LIMIT_{name.upper()}_RPM")
+    env_burst = os.environ.get(f"RATE_LIMIT_{name.upper()}_BURST")
+    env_concurrency = os.environ.get(f"RATE_LIMIT_{name.upper()}_CONCURRENCY")
+    default_spec = DEFAULT_PROVIDER_CONFIGS.get(name, {})
+
+    source = "built-in default"
+    if env_rpm:
+        rpm = int(env_rpm)
+        source = f"env: RATE_LIMIT_{name.upper()}_RPM={env_rpm}"
+    elif name in yaml_config:
+        rpm = yaml_spec.get(
+            "requests_per_minute",
+            default_spec.get("requests_per_minute", 0),
+        )
+        source = f"YAML: {path}"
+    else:
+        rpm = default_spec.get("requests_per_minute", 0)
+
+    if rpm <= 0:
+        log.warning("rate_limit_disabled", provider=name)
+        return None
+
+    burst_str = env_burst or yaml_spec.get("burst", default_spec.get("burst"))
+    burst = int(burst_str) if burst_str else None
+
+    conc_str = env_concurrency or yaml_spec.get(
+        "max_concurrent", default_spec.get("max_concurrent")
+    )
+    max_concurrent = int(conc_str) if conc_str else None
+
+    return RateLimitConfig.from_rpm(
+        name=name,
+        requests_per_minute=rpm,
+        burst=burst,
+        acquire_timeout=yaml_spec.get("acquire_timeout", 30.0),
+        max_concurrent=max_concurrent,
+        source=source,
+    )
+
+
 def load_provider_configs(
-    path: Optional[str] = None,
+    path: str | None = None,
 ) -> dict[str, RateLimitConfig]:
     """Load provider rate-limit configs from a YAML file (preferred) or env vars.
 
@@ -122,86 +206,16 @@ def load_provider_configs(
     2. Environment variables: RATE_LIMIT_<PROVIDER>_RPM, _BURST, _CONCURRENCY.
     3. Embedded DEFAULT_PROVIDER_CONFIGS (empty by default).
     """
-    configs: dict[str, RateLimitConfig] = {}
-
     path = path or os.environ.get(
         "RATE_LIMIT_CONFIG_PATH",
-        os.path.expanduser("~/.config/langshark_bites/rate_limits.yaml"),
+        str(Path("~/.config/langshark_bites/rate_limits.yaml").expanduser()),
     )
-
-    # 1. Try YAML file
-    yaml_config: dict[str, Any] = {}
-    if os.path.exists(path):
-        try:
-            import yaml
-
-            with open(path) as f:
-                data = yaml.safe_load(f) or {}
-            yaml_config = data.get("providers", {})
-            if not yaml_config:
-                log.warning("rate_limit_config_empty", path=path)
-        except Exception:
-            log.error(
-                "rate_limit_config_parse_error",
-                path=path,
-                exc_info=True,
-            )
-    else:
-        log.info("rate_limit_config_missing", path=path)
-
-    # 2. Merge: YAML > env > defaults
-    all_providers: set[str] = set(DEFAULT_PROVIDER_CONFIGS.keys())
-    all_providers.update(yaml_config.keys())
-
-    # Scan env for RATE_LIMIT_*_RPM
-    for key in os.environ:
-        if key.startswith("RATE_LIMIT_") and key.endswith("_RPM"):
-            provider = key[len("RATE_LIMIT_") : -len("_RPM")].lower()
-            all_providers.add(provider)
-
-    for name in sorted(all_providers):
-        yaml_spec = yaml_config.get(name, {})
-        env_rpm = os.environ.get(f"RATE_LIMIT_{name.upper()}_RPM")
-        env_burst = os.environ.get(f"RATE_LIMIT_{name.upper()}_BURST")
-        env_concurrency = os.environ.get(
-            f"RATE_LIMIT_{name.upper()}_CONCURRENCY"
-        )
-        default_spec = DEFAULT_PROVIDER_CONFIGS.get(name, {})
-
-        # Determine RPM value and its source (env > YAML > default)
-        source = "built-in default"
-        if env_rpm:
-            rpm = int(env_rpm)
-            source = f"env: RATE_LIMIT_{name.upper()}_RPM={env_rpm}"
-        elif name in yaml_config:
-            rpm = yaml_spec.get(
-                "requests_per_minute",
-                default_spec.get("requests_per_minute", 0),
-            )
-            source = f"YAML: {path}"
-        else:
-            rpm = default_spec.get("requests_per_minute", 0)
-
-        if rpm <= 0:
-            log.warning("rate_limit_disabled", provider=name)
-            continue
-
-        burst_str = env_burst or yaml_spec.get("burst", default_spec.get("burst"))
-        burst = int(burst_str) if burst_str else None
-
-        conc_str = env_concurrency or yaml_spec.get(
-            "max_concurrent", default_spec.get("max_concurrent")
-        )
-        max_concurrent = int(conc_str) if conc_str else None
-
-        configs[name] = RateLimitConfig.from_rpm(
-            name=name,
-            requests_per_minute=rpm,
-            burst=burst,
-            acquire_timeout=yaml_spec.get("acquire_timeout", 30.0),
-            max_concurrent=max_concurrent,
-            source=source,
-        )
+    yaml_config = _load_yaml_providers(path)
+    configs: dict[str, RateLimitConfig] = {}
+    for name in sorted(_discover_provider_names(yaml_config)):
+        cfg = _config_for_provider(name, yaml_config=yaml_config, path=path)
+        if cfg is not None:
+            configs[name] = cfg
 
     if not configs:
         log.warning("rate_limiter_no_config")
@@ -214,7 +228,7 @@ def load_provider_configs(
 # ---------------------------------------------------------------------------
 
 # KEYS[1] = bucket key
-# ARGV[1] = capacity, ARGV[2] = refill_rate (tokens/sec),
+# ARGV[1] = capacity, ARGV[2] = refill_rate (tokens/sec),  # noqa: ERA001
 # ARGV[3] = now (ms, float-safe as string), ARGV[4] = requested tokens
 _TOKEN_BUCKET_LUA = """
 local capacity   = tonumber(ARGV[1])
@@ -258,11 +272,12 @@ class RateLimiter:
     #: Debounce interval for ``rate_limit_throttled`` WARNING (seconds).
     _THROTTLE_WARN_INTERVAL: float = 10.0
 
-    def __init__(self, redis_url: str, configs: dict[str, RateLimitConfig]):
+    def __init__(self, redis_url: str, configs: dict[str, RateLimitConfig]) -> None:
+        """Build a limiter backed by ``redis_url`` using per-provider ``configs``."""
         self._redis_url = redis_url
         self._configs = configs
         self._redis: Any = None
-        self._script_sha: Optional[str] = None
+        self._script_sha: str | None = None
         self._redis_ok: bool = True
         self._redis_warned: bool = False
         self._init_lock = asyncio.Lock()
@@ -286,19 +301,15 @@ class RateLimiter:
     @classmethod
     def from_env(
         cls,
-        redis_url: Optional[str] = None,
-        config_path: Optional[str] = None,
-    ) -> "RateLimiter":
+        redis_url: str | None = None,
+        config_path: str | None = None,
+    ) -> RateLimiter:
         """Factory: read config from env/defaults and return a RateLimiter."""
-        redis_url = redis_url or os.environ.get(
-            "REDIS_URL", "redis://localhost:6379/0"
-        )
+        redis_url = redis_url or os.environ.get("REDIS_URL", "redis://localhost:6379/0")
         configs = load_provider_configs(config_path)
         instance = cls(redis_url=redis_url, configs=configs)
         if configs:
-            names = ", ".join(
-                f"{cfg.name}({cfg.capacity}/min)" for cfg in configs.values()
-            )
+            names = ", ".join(f"{cfg.name}({cfg.capacity}/min)" for cfg in configs.values())
             log.info("rate_limiter_configured", providers=names)
         return instance
 
@@ -314,9 +325,7 @@ class RateLimiter:
             try:
                 import redis.asyncio as aioredis
 
-                self._redis = aioredis.from_url(
-                    self._redis_url, decode_responses=True
-                )
+                self._redis = aioredis.from_url(self._redis_url, decode_responses=True)
                 # Load the Lua script once
                 self._script_sha = await self._redis.script_load(_TOKEN_BUCKET_LUA)
                 # Verify connectivity
@@ -354,7 +363,7 @@ class RateLimiter:
             "source": cfg.source,
         }
 
-    def acquire(self, provider: str) -> "_AcquireContext":
+    def acquire(self, provider: str) -> _AcquireContext:
         """Return an async context manager that acquires a rate-limit token.
 
         Usage::
@@ -374,15 +383,83 @@ class RateLimiter:
 
         return _AcquireContext(self, provider, config)
 
-    async def _acquire_token(
-        self, provider: str, config: RateLimitConfig
-    ) -> float:
+    async def _try_redis_acquire(
+        self, provider: str, config: RateLimitConfig, start: float
+    ) -> float | None:
+        """Attempt one Redis token-bucket take. None means fall through to local."""
+        if not (await self._ensure_redis() and self._script_sha is not None):
+            return None
+        try:
+            now_ms = asyncio.get_event_loop().time() * 1000
+            redis = self._redis
+            assert redis is not None  # guarded by _ensure_redis
+            result = await redis.evalsha(
+                self._script_sha,
+                1,
+                f"rate_limit:{provider}",
+                str(config.capacity),
+                str(config.refill_rate),
+                str(now_ms),
+                "1",
+            )
+            if int(result[0]):
+                return asyncio.get_event_loop().time() - start
+
+            remaining = float(result[1])
+            now_ts = asyncio.get_event_loop().time()
+            last_warn = self._last_throttle_warned.get(provider, 0)
+            if now_ts - last_warn >= self._THROTTLE_WARN_INTERVAL:
+                wait_est = (1.0 - remaining) / config.refill_rate
+                log.warning("rate_limit_throttled", provider=provider, wait=wait_est)
+                self._last_throttle_warned[provider] = now_ts
+            return None
+        except Exception:
+            self._redis_ok = False
+            self._script_sha = None
+            if not self._redis_warned:
+                log.error("rate_limiter_redis_unavailable", exc_info=True)
+                self._redis_warned = True
+            return None
+
+    async def _try_local_acquire(
+        self,
+        provider: str,
+        config: RateLimitConfig,
+        start: float,
+        deadline: float,
+        now_mono: float,
+    ) -> float | None:
+        """In-process token-bucket fallback. None means sleep-and-retry."""
+        now = asyncio.get_event_loop().time()
+        tokens = self._local_tokens.get(provider, float(config.capacity))
+        last = self._local_last_acquire.get(provider, now)
+
+        delta = max(0.0, now - last)
+        tokens = min(float(config.capacity), tokens + delta * config.refill_rate)
+        self._local_last_acquire[provider] = now
+
+        if tokens >= 1.0:
+            self._local_tokens[provider] = tokens - 1.0
+            return asyncio.get_event_loop().time() - start
+
+        self._local_tokens[provider] = tokens
+        wait_sec = max(0.05, (1.0 - tokens) / config.refill_rate)
+        wait_sec = min(wait_sec, deadline - now_mono)
+        if wait_sec > 0:
+            from langshark_bites.api_backoff import async_backoff
+
+            await async_backoff(
+                wait_sec,
+                context=f"rate_limit:{provider} (in-process fallback)",
+            )
+        return None
+
+    async def _acquire_token(self, provider: str, config: RateLimitConfig) -> float:
         """Acquire a token from Redis (or local fallback).
 
         Returns the wait time in seconds (0 if acquired immediately).
         Raises asyncio.TimeoutError if acquire_timeout is exceeded.
         """
-        # -- max_concurrent gate (local, per-process) --
         sem = self._local_semaphores.get(provider)
         if sem is not None and config.max_concurrent:
             await sem.acquire()
@@ -400,88 +477,24 @@ class RateLimiter:
                     provider=provider,
                     timeout=config.acquire_timeout,
                 )
-                raise asyncio.TimeoutError(
+                raise TimeoutError(
                     f"Rate limit acquire timeout for '{provider}' "
                     f"after {config.acquire_timeout:.0f}s"
                 )
 
-            # Try Redis first
-            if await self._ensure_redis() and self._script_sha is not None:
-                try:
-                    now_ms = asyncio.get_event_loop().time() * 1000
-                    result = await self._redis.evalsha(  # type: ignore[union-attr]
-                        self._script_sha,
-                        1,
-                        f"rate_limit:{provider}",
-                        str(config.capacity),
-                        str(config.refill_rate),
-                        str(now_ms),
-                        "1",
-                    )
-                    allowed = int(result[0])
-                    if allowed:
-                        wait = asyncio.get_event_loop().time() - start
-                        return wait
+            waited = await self._try_redis_acquire(provider, config, start)
+            if waited is not None:
+                return waited
 
-                    # Token bucket empty — emit debounced WARNING
-                    remaining = float(result[1])
-                    now_ts = asyncio.get_event_loop().time()
-                    last_warn = self._last_throttle_warned.get(provider, 0)
-                    if now_ts - last_warn >= self._THROTTLE_WARN_INTERVAL:
-                        wait_est = (1.0 - remaining) / config.refill_rate
-                        log.warning(
-                            "rate_limit_throttled",
-                            provider=provider,
-                            wait=wait_est,
-                        )
-                        self._last_throttle_warned[provider] = now_ts
-                except Exception:
-                    # Redis call failed mid-operation -- fall through to local
-                    self._redis_ok = False
-                    self._script_sha = None
-                    if not self._redis_warned:
-                        log.error(
-                            "rate_limiter_redis_unavailable",
-                            exc_info=True,
-                        )
-                        self._redis_warned = True
-
-            # -- Local fallback: simulate token bucket in-process --
-            now = asyncio.get_event_loop().time()
-            tokens = self._local_tokens.get(provider, float(config.capacity))
-            last = self._local_last_acquire.get(provider, now)
-
-            delta = max(0.0, now - last)
-            tokens = min(
-                float(config.capacity), tokens + delta * config.refill_rate
-            )
-            self._local_last_acquire[provider] = now
-
-            if tokens >= 1.0:
-                self._local_tokens[provider] = tokens - 1.0
-                wait = asyncio.get_event_loop().time() - start
-                return wait
-
-            self._local_tokens[provider] = tokens
-
-            # Sleep briefly before retrying
-            wait_sec = max(0.05, (1.0 - tokens) / config.refill_rate)
-            wait_sec = min(wait_sec, deadline - now_mono)
-            if wait_sec > 0:
-                from langshark_bites.api_backoff import async_backoff
-
-                await async_backoff(
-                    wait_sec,
-                    context=f"rate_limit:{provider} (in-process fallback)",
-                )
+            waited = await self._try_local_acquire(provider, config, start, deadline, now_mono)
+            if waited is not None:
+                return waited
 
 
 class _AcquireContext:
     """Async context manager returned by RateLimiter.acquire()."""
 
-    def __init__(
-        self, limiter: RateLimiter, provider: str, config: RateLimitConfig
-    ):
+    def __init__(self, limiter: RateLimiter, provider: str, config: RateLimitConfig) -> None:
         self._limiter = limiter
         self._provider = provider
         self._config = config

@@ -14,6 +14,7 @@ from langshark_bites.json_output_parser import (
 # _extract_json_object
 # ---------------------------------------------------------------------------
 
+
 class TestExtractJsonObject:
     def test_flat_object(self):
         """Simple flat JSON object."""
@@ -27,6 +28,7 @@ class TestExtractJsonObject:
         assert result == raw
         # Verify the extracted string is valid JSON
         import json
+
         parsed = json.loads(result)
         assert parsed == {"a": {"b": 1, "c": {"d": 2}}, "e": 3}
 
@@ -36,6 +38,7 @@ class TestExtractJsonObject:
         result = _extract_json_object(raw)
         assert result == raw
         import json
+
         assert json.loads(result) == {"items": [{"x": 1}, {"y": 2}], "count": 2}
 
     def test_top_level_array(self):
@@ -48,6 +51,7 @@ class TestExtractJsonObject:
         result = _extract_json_object(raw)
         assert result == raw
         import json
+
         assert json.loads(result) == {"msg": "braces { like } this", "ok": True}
 
     def test_string_with_escaped_quotes(self):
@@ -82,6 +86,7 @@ class TestExtractJsonObject:
 # _extract_all_json_objects
 # ---------------------------------------------------------------------------
 
+
 class TestExtractAllJsonObjects:
     def test_single_object(self):
         """Single flat object."""
@@ -95,9 +100,9 @@ class TestExtractAllJsonObjects:
     def test_leading_text_then_multiple_objects(self):
         """Thinking/reasoning text with inline JSON objects before final output."""
         text = (
-            'Let me analyze the signals...\n'
+            "Let me analyze the signals...\n"
             'I see a chart spec: {"type": "line", "spec": {"ticker": "XLV", "window_days": 60}}\n'
-            'Now the full analysis:\n'
+            "Now the full analysis:\n"
             '{"worker_name": "daily_signal_analysis", "observations": []}'
         )
         result = _extract_all_json_objects(text)
@@ -123,6 +128,7 @@ class TestExtractAllJsonObjects:
         result = _extract_all_json_objects(raw)
         assert len(result) == 2
         import json
+
         assert json.loads(result[0]) == {"msg": "braces { like } this", "ok": True}
         assert json.loads(result[1]) == {"second": 1}
 
@@ -144,6 +150,7 @@ class TestExtractAllJsonObjects:
 # extract_structured_from_messages
 # ---------------------------------------------------------------------------
 
+
 class ObservationModel(BaseModel):
     symbol: str
     direction: str
@@ -158,9 +165,7 @@ class WorkerOutputTest(BaseModel):
 class TestExtractStructuredFromMessages:
     def test_flat_message(self):
         """Success path with a single AI message containing valid JSON."""
-        messages = [
-            {"role": "assistant", "content": '{"worker_name": "test", "observations": []}'}
-        ]
+        messages = [{"role": "assistant", "content": '{"worker_name": "test", "observations": []}'}]
         result = extract_structured_from_messages(messages, WorkerOutputTest)
         assert result is not None
         assert result.worker_name == "test"
@@ -271,9 +276,7 @@ class TestTruncatedJsonSalvage:
 
     def test_salvage_truncated_only_worker_name(self):
         """Severely truncated — only the required field survives."""
-        messages = [
-            {"role": "assistant", "content": 'reasoning...\n{"worker_name": "test"'}
-        ]
+        messages = [{"role": "assistant", "content": 'reasoning...\n{"worker_name": "test"'}]
         result = extract_structured_from_messages(messages, WorkerOutputTest)
         assert result is not None
         assert result.worker_name == "test"
@@ -281,9 +284,7 @@ class TestTruncatedJsonSalvage:
 
     def test_salvage_truncated_missing_required_field(self):
         """Truncated before the required field — validation must still fail."""
-        messages = [
-            {"role": "assistant", "content": '{"observations": [{"symbol": "SPX"'}
-        ]
+        messages = [{"role": "assistant", "content": '{"observations": [{"symbol": "SPX"'}]
         result = extract_structured_from_messages(messages, WorkerOutputTest)
         assert result is None
 
@@ -295,7 +296,8 @@ class TestTruncatedJsonSalvage:
                 "role": "assistant",
                 "content": (
                     'Intermediate: {"worker_name": "wrong", "observations": []}\n'
-                    'Final: {"worker_name": "test", "observations": [{"symbol": "XLV", "direction": "neutral"}'
+                    'Final: {"worker_name": "test", "observations": '
+                    '[{"symbol": "XLV", "direction": "neutral"}'
                 ),
             }
         ]
@@ -312,9 +314,9 @@ class TestTruncatedJsonSalvage:
             {
                 "role": "assistant",
                 "content": (
-                    'Let me analyze the signals...\n'
+                    "Let me analyze the signals...\n"
                     'Chart: {"type": "line", "spec": {"ticker": "XLV", "window_days": 60}}\n'
-                    'Now the output:\n'
+                    "Now the output:\n"
                     '{"worker_name": "test", '
                     '"observations": [{"symbol": "SPX", "direction": "bullish"}], '
                     '"cross_cutting_notes": "all good"}'

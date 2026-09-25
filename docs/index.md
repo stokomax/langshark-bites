@@ -78,9 +78,9 @@ from langshark_bites.api_rate_limiter import RateLimiter, rate_limited
 
 limiter = RateLimiter.from_env()
 
+
 @rate_limited(limiter, provider="newsapi")
-async def fetch_news(ticker: str):
-    ...
+async def fetch_news(ticker: str): ...
 ```
 
 [Full docs: `api_rate_limiter`](api_rate_limiter.md)
@@ -134,6 +134,7 @@ content = extract_structured_from_messages(state.get("messages", []), MySchema)
 from typing import Annotated
 from langshark_bites.state_reducers import envelope_reducer
 
+
 class State(TypedDict):
     collected_outputs: Annotated[list[dict], envelope_reducer]
 ```
@@ -149,12 +150,35 @@ from langshark_bites.observability import init_phoenix, agent_span
 
 init_phoenix(endpoint="http://localhost:6006", project_name="my-app")
 
+
 @agent_span(parse_agent_name=True)
-async def run_worker(agent_name: str):
-    ...
+async def run_worker(agent_name: str): ...
 ```
 
 [Full docs: `observability`](observability.md)
+
+### Notify a supervisor from a separate subagent server — `a2a_completion_notifier`
+
+**Solves:** a subagent running on a different Agent Server never tells the supervisor it finished — LangChain implements no A2A push side.
+
+```python
+from langshark_bites.a2a_completion_notifier.middleware import (
+    build_a2a_notifier_from_config,
+)
+from langshark_bites.a2a_completion_notifier.push_client import PushClient
+from langshark_bites.a2a_completion_notifier.signer import A2ASigner
+
+
+def make_graph(config):
+    notifier = build_a2a_notifier_from_config(
+        config,
+        signer=A2ASigner(pem, kid="subagent-1", issuer=..., audience=...),
+        push_client=PushClient(),
+    )
+    return create_agent(model=..., tools=..., middleware=[notifier])
+```
+
+[Full docs: `a2a_completion_notifier`](a2a_completion_notifier.md)
 
 ## A quick note on LangGraph terms
 

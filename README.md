@@ -22,10 +22,19 @@ Each bite solves one specific problem you run into when building multi-agent sys
 
 ## Installation
 
+Releases are published to [GitHub Packages](https://github.com/stokomax/langshark-bites/packages)
+(PyPI registry), not to pypi.org. GitHub Packages requires authentication for
+**every** install, including public repos — a `GITHUB_TOKEN` (in Actions) or a
+personal access token with `read:packages` scope (locally).
+
 ```bash
-uv add langshark-bites
-# or
-pip install langshark-bites
+# uv
+uv add --index https://pypi.pkg.github.com/stokomax/langshark-bites langshark-bites
+# requires a PAT with read:packages, e.g. via UV_INDEX_<NAME>_PASSWORD or netrc
+
+# pip
+pip install langshark-bites \
+  --index-url https://<username>:<token>@pypi.pkg.github.com/stokomax/langshark-bites/simple/
 ```
 
 The base package covers every bite **except** `a2a_completion_notifier`. Its
@@ -34,15 +43,15 @@ emitter middleware requires the extra's dependencies:
 
 ```bash
 # For the a2a_completion_notifier bite (fastapi, mcp[cli], uvicorn[standard]):
-uv add "langshark-bites[a2a-notifier]"
+uv add --index https://pypi.pkg.github.com/stokomax/langshark-bites "langshark-bites[a2a-notifier]"
 ```
 
 ### Which install you need
 
 | Bite | Install command |
 |---|---|
-| `api_rate_limiter`, `api_backoff`, `provider_failover`, `json_output_parser`, `state_reducers`, `observability` | `uv add langshark-bites` |
-| `a2a_completion_notifier` | `uv add "langshark-bites[a2a-notifier]"` |
+| `api_rate_limiter`, `api_backoff`, `provider_failover`, `json_output_parser`, `state_reducers`, `observability` | `uv add --index https://pypi.pkg.github.com/stokomax/langshark-bites langshark-bites` |
+| `a2a_completion_notifier` | `uv add --index https://pypi.pkg.github.com/stokomax/langshark-bites "langshark-bites[a2a-notifier]"` |
 
 ## The bites
 
